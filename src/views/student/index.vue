@@ -38,6 +38,7 @@
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>
       </div>
@@ -66,7 +67,7 @@
       <el-table-column prop="status" label="账号状态" width="100">
         <template #default="{ row }">
           <el-tag :type="row.status === 0 ? 'success' : 'danger'">
-            {{ row.status === 0 ? '已启用' : '已禁用' }}
+            {{ row.status === 0 ? '已启用' : '未使用' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -155,7 +156,7 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { selectStudent, updateStudent, toggleStudentStatus } from '@/api/student'
+import { selectStudent, saveStudent, toggleStudentStatus } from '@/api/student'
 
 const router = useRouter()
 
@@ -221,14 +222,21 @@ const getStudentList = async () => {
   loading.value = true
   try {
     const params = {
-      ...searchForm,
-      pageNo: currentPage.value,
       pageSize: pageSize.value,
+      pageNo: currentPage.value,
+      queryParams: {
+        studentId: searchForm.studentId,
+        studentName: searchForm.studentName,
+        profession: searchForm.profession,
+        certification: searchForm.certification,
+      },
     }
     const res = await selectStudent(params)
-    if (res.code === 0) {
-      tableData.value = res.data.list
-      total.value = res.data.totalCount
+    if (res.code === 0 && res.data) {
+      tableData.value = res.data.list || []
+      total.value = res.data.totalCount || 0
+      currentPage.value = res.data.pageNo || 1
+      pageSize.value = res.data.pageSize || 10
     } else {
       ElMessage.error(res.message || '获取学生列表失败')
     }
@@ -284,15 +292,17 @@ const handleSubmit = () => {
   formRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await updateStudent(form)
+        const res = await saveStudent(form)
         if (res.code === 0) {
-          ElMessage.success('更新成功')
+          ElMessage.success('保存成功')
           dialogVisible.value = false
           getStudentList()
+        } else {
+          ElMessage.error(res.message || '保存失败')
         }
       } catch (error) {
-        console.error('更新失败:', error)
-        ElMessage.error('更新失败')
+        console.error('保存失败:', error)
+        ElMessage.error('保存失败')
       }
     }
   })
@@ -321,6 +331,16 @@ const handleToggleStatus = (row) => {
     .catch(() => {
       ElMessage.info('已取消操作')
     })
+}
+
+// 新增学生信息
+const handleAdd = () => {
+  dialogType.value = 'edit'
+  // 重置表单数据
+  Object.keys(form).forEach((key) => {
+    form[key] = key === 'gender' ? 1 : ''
+  })
+  dialogVisible.value = true
 }
 
 // 初始化
@@ -364,12 +384,21 @@ getStudentList()
 :deep(.el-table) {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
+  margin-bottom: 20px;
 }
 
 .pagination-wrapper {
-  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 15px;
   display: flex;
   justify-content: center;
+}
+
+:deep(.el-pagination) {
+  justify-content: center;
+  padding: 0;
 }
 
 .operation-buttons {

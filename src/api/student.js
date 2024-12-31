@@ -17,7 +17,7 @@ export function getStudentInfo() {
   })
 }
 
-// 查询学生信息（管理员）
+// 查询学生列表
 export function selectStudent(data) {
   return request({
     url: '/api/student/selectStudent',
@@ -26,10 +26,10 @@ export function selectStudent(data) {
   })
 }
 
-// 更新学生信息
-export function updateStudent(data) {
+// 保存或更新学生信息
+export function saveStudent(data) {
   return request({
-    url: '/api/student/update',
+    url: '/api/student/saveStudent',
     method: 'post',
     data,
   })
@@ -38,8 +38,11 @@ export function updateStudent(data) {
 // 切换学生账号状态
 export function toggleStudentStatus(id, status) {
   return request({
-    url: '/api/student/updateStatus',
-    method: 'post',
-    data: { id, status },
+    url: '/api/student/status',
+    method: 'put',
+    data: {
+      id,
+      status,
+    },
   })
 }
