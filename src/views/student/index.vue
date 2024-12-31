@@ -2,27 +2,45 @@
   <div class="student-container">
     <!-- 搜索区域 -->
     <div class="search-wrapper">
-      <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="学号">
-          <el-input v-model="searchForm.studentId" placeholder="请输入学号" clearable />
-        </el-form-item>
-        <el-form-item label="姓名">
-          <el-input v-model="searchForm.name" placeholder="请输入姓名" clearable />
-        </el-form-item>
-        <el-form-item label="专业">
-          <el-input v-model="searchForm.profession" placeholder="请输入专业" clearable />
-        </el-form-item>
-        <el-form-item label="认证状态">
-          <el-select v-model="searchForm.verifyStatus" placeholder="请选择认证状态" clearable>
-            <el-option label="已认证" :value="1" />
-            <el-option label="未认证" :value="0" />
+      <div class="search-form">
+        <div class="search-inputs">
+          <el-input
+            v-model="searchForm.studentId"
+            placeholder="请输入学号"
+            clearable
+            style="width: 200px"
+          />
+          <el-input
+            v-model="searchForm.studentName"
+            placeholder="请输入姓名"
+            clearable
+            style="width: 200px"
+          />
+          <el-input
+            v-model="searchForm.profession"
+            placeholder="请输入专业"
+            clearable
+            style="width: 200px"
+          />
+          <el-select
+            v-model="searchForm.certification"
+            placeholder="认证状态"
+            clearable
+            style="width: 200px"
+          >
+            <el-option
+              v-for="item in certificationOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-select>
-        </el-form-item>
-        <el-form-item>
+        </div>
+        <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="resetSearch">重置</el-button>
-        </el-form-item>
-      </el-form>
+        </div>
+      </div>
     </div>
 
     <!-- 表格区域 -->
@@ -38,10 +56,10 @@
       </el-table-column>
       <el-table-column prop="email" label="邮箱" width="200" />
       <el-table-column prop="phone" label="电话" width="130" />
-      <el-table-column prop="verifyStatus" label="认证状态" width="100">
+      <el-table-column prop="certification" label="认证状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.verifyStatus === 1 ? 'success' : 'warning'">
-            {{ row.verifyStatus === 1 ? '已认证' : '未认证' }}
+          <el-tag :type="row.certification === 1 ? 'success' : 'warning'">
+            {{ row.certification === 1 ? '已认证' : '未认证' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -52,17 +70,19 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" fixed="right" width="150">
+      <el-table-column label="操作" fixed="right" width="180">
         <template #default="{ row }">
-          <el-button link type="primary" @click="handleView(row)">查看</el-button>
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button
-            link
-            :type="row.status === 0 ? 'danger' : 'success'"
-            @click="handleToggleStatus(row)"
-          >
-            {{ row.status === 0 ? '禁用' : '启用' }}
-          </el-button>
+          <div class="operation-buttons">
+            <el-button size="small" type="primary" @click="handleView(row)"> 查看 </el-button>
+            <el-button size="small" type="warning" @click="handleEdit(row)"> 编辑 </el-button>
+            <el-button
+              size="small"
+              :type="row.status === 0 ? 'danger' : 'success'"
+              @click="handleToggleStatus(row)"
+            >
+              {{ row.status === 0 ? '禁用' : '启用' }}
+            </el-button>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -135,16 +155,24 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
+import { selectStudent, updateStudent, toggleStudentStatus } from '@/api/student'
 
 const router = useRouter()
 
 // 搜索表单
 const searchForm = reactive({
   studentId: '',
-  name: '',
+  studentName: '',
   profession: '',
-  verifyStatus: '',
+  certification: '',
 })
+
+// 认证状态选项
+const certificationOptions = [
+  { label: '全部', value: '' },
+  { label: '已认证', value: 'pass' },
+  { label: '未认证', value: 'pending' },
+]
 
 // 表格数据
 const tableData = ref([])
@@ -192,23 +220,17 @@ const rules = {
 const getStudentList = async () => {
   loading.value = true
   try {
-    const token = localStorage.getItem('token')
-    const params = new URLSearchParams({
+    const params = {
       ...searchForm,
-      pageNum: currentPage.value,
+      pageNo: currentPage.value,
       pageSize: pageSize.value,
-    })
-    const res = await fetch(`/api/student/list?${params}`, {
-      headers: {
-        token: token,
-      },
-    })
-    const data = await res.json()
-    if (data.code === 0) {
-      tableData.value = data.data.records
-      total.value = data.data.total
+    }
+    const res = await selectStudent(params)
+    if (res.code === 0) {
+      tableData.value = res.data.list
+      total.value = res.data.totalCount
     } else {
-      ElMessage.error(data.message || '获取学生列表失败')
+      ElMessage.error(res.message || '获取学生列表失败')
     }
   } catch (error) {
     console.error('获取学生列表失败:', error)
@@ -262,22 +284,11 @@ const handleSubmit = () => {
   formRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        const token = localStorage.getItem('token')
-        const res = await fetch('/api/student/update', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            token: token,
-          },
-          body: JSON.stringify(form),
-        })
-        const data = await res.json()
-        if (data.code === 0) {
+        const res = await updateStudent(form)
+        if (res.code === 0) {
           ElMessage.success('更新成功')
           dialogVisible.value = false
           getStudentList()
-        } else {
-          ElMessage.error(data.message || '更新失败')
         }
       } catch (error) {
         console.error('更新失败:', error)
@@ -297,31 +308,19 @@ const handleToggleStatus = (row) => {
   })
     .then(async () => {
       try {
-        const token = localStorage.getItem('token')
-        const res = await fetch('/api/student/updateStatus', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            token: token,
-          },
-          body: JSON.stringify({
-            id: row.id,
-            status: row.status === 0 ? 1 : 0,
-          }),
-        })
-        const data = await res.json()
-        if (data.code === 0) {
+        const res = await toggleStudentStatus(row.id, row.status === 0 ? 1 : 0)
+        if (res.code === 0) {
           ElMessage.success(`${action}成功`)
           getStudentList()
-        } else {
-          ElMessage.error(data.message || `${action}失败`)
         }
       } catch (error) {
         console.error(`${action}失败:`, error)
         ElMessage.error(`${action}失败`)
       }
     })
-    .catch(() => {})
+    .catch(() => {
+      ElMessage.info('已取消操作')
+    })
 }
 
 // 初始化
@@ -344,7 +343,17 @@ getStudentList()
 
 .search-form {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.search-buttons {
+  display: flex;
   gap: 10px;
 }
 
@@ -360,6 +369,16 @@ getStudentList()
 .pagination-wrapper {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+}
+
+.operation-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.operation-buttons .el-button {
+  padding: 4px 8px;
+  min-height: 28px;
 }
 </style>
