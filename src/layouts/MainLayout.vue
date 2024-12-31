@@ -27,6 +27,10 @@
             <span>专业信息</span>
           </el-menu-item>
         </template>
+        <el-menu-item index="/profile">
+          <el-icon><UserFilled /></el-icon>
+          <span>个人信息</span>
+        </el-menu-item>
       </el-menu>
     </div>
 
