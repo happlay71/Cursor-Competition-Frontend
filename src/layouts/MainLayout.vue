@@ -200,6 +200,22 @@ const handleCommand = (command) => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.header-right :deep(.el-avatar) {
+  background: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.header-right :deep(.el-avatar):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .user-info {
