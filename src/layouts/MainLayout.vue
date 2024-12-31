@@ -255,7 +255,7 @@ const handleCommand = (command) => {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-  display: flex;
+  /* display: flex; */
   align-items: center;
   justify-content: flex-end;
   position: fixed;

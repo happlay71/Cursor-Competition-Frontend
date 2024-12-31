@@ -1,6 +1,7 @@
 <template>
   <div class="profile-container">
-    <el-card class="profile-card">
+    <!-- 左侧卡片：基本信息 -->
+    <el-card class="profile-card left-card">
       <div class="avatar-wrapper">
         <el-avatar :size="120" :src="userAvatar">
           {{ avatarText }}
@@ -16,31 +17,73 @@
           <span class="value">{{ username }}</span>
         </div>
         <div class="info-item">
-          <span class="label">角色：</span>
-          <el-tag :type="isAdmin ? 'danger' : 'success'">
-            {{ isAdmin ? '管理员' : '普通用户' }}
-          </el-tag>
-        </div>
-        <div class="info-item">
           <span class="label">状态：</span>
           <el-tag :type="status === 0 ? 'success' : 'danger'">
             {{ status === 0 ? '已启用' : '已禁用' }}
           </el-tag>
         </div>
         <div class="info-item">
-          <span class="label">认证状态：</span>
+          <span class="label">身份：</span>
+          <el-tag :type="isAdmin ? 'danger' : 'success'">
+            {{ isAdmin ? '管理员' : '普通用户' }}
+          </el-tag>
+        </div>
+        <div class="info-item">
+          <span class="label">学生认证：</span>
           <el-tag :type="isVerified ? 'success' : 'warning'">
             {{ isVerified ? '已认证' : '未认证' }}
           </el-tag>
-          <el-button
-            v-if="!isVerified"
-            type="primary"
-            size="small"
-            class="verify-btn"
-            @click="handleVerify"
-          >
-            学生认证
-          </el-button>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- 右侧卡片：学生信息 -->
+    <el-card class="profile-card right-card">
+      <!-- 未认证状态显示 -->
+      <div v-if="!isVerified" class="unverified-tips">
+        <el-empty description="暂未认证" :image-size="200">
+          <template #description>
+            <div class="empty-text">
+              <p>您还未完成学生认证</p>
+              <p>认证后可以参与学生竞赛获奖信息管理</p>
+            </div>
+          </template>
+          <el-button type="primary" @click="handleVerify">立即认证</el-button>
+        </el-empty>
+      </div>
+
+      <!-- 已认证状态显示学生信息 -->
+      <div v-else class="student-info">
+        <div class="section-title">学生信息</div>
+        <div class="info-grid">
+          <div class="grid-item">
+            <span class="label">学号：</span>
+            <span class="value">{{ studentInfo.studentId }}</span>
+          </div>
+          <div class="grid-item">
+            <span class="label">姓名：</span>
+            <span class="value">{{ studentInfo.name }}</span>
+          </div>
+          <div class="grid-item">
+            <span class="label">年级：</span>
+            <span class="value">{{ studentInfo.grade }}</span>
+          </div>
+          <div class="grid-item">
+            <span class="label">专业：</span>
+            <span class="value">{{ studentInfo.majorName }}</span>
+          </div>
+          <div class="grid-item">
+            <span class="label">性别：</span>
+            <span class="value">{{ studentInfo.gender === 1 ? '男' : '女' }}</span>
+          </div>
+          <div class="grid-item">
+            <span class="label">邮箱：</span>
+            <span class="value">{{ studentInfo.email }}</span>
+          </div>
+          <div class="grid-item">
+            <span class="label">电话：</span>
+            <span class="value">{{ studentInfo.phone }}</span>
+          </div>
         </div>
       </div>
     </el-card>
@@ -64,7 +107,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitVerify"> 确认 </el-button>
+          <el-button type="primary" @click="submitVerify">确认</el-button>
         </span>
       </template>
     </el-dialog>
@@ -72,7 +115,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
 
@@ -158,6 +201,41 @@ const submitVerify = () => {
     }
   })
 }
+
+// 学生信息（模拟数据，实际应该从后端获取）
+const studentInfo = ref({
+  studentId: '',
+  name: '',
+  grade: '',
+  majorName: '',
+  gender: null,
+  email: '',
+  phone: '',
+})
+
+// 获取学生信息
+const getStudentInfo = async () => {
+  try {
+    // TODO: 调用后端接口获取学生信息
+    const res = await fetch('/api/student/info', {
+      headers: {
+        Authorization: localStorage.getItem('token'),
+      },
+    })
+    const data = await res.json()
+    if (data.code === 0) {
+      studentInfo.value = data.data
+      isVerified.value = true
+    }
+  } catch (error) {
+    console.error('获取学生信息失败:', error)
+  }
+}
+
+// 在页面加载时获取学生信息
+onMounted(() => {
+  getStudentInfo()
+})
 </script>
 
 <style scoped>
@@ -165,23 +243,39 @@ const submitVerify = () => {
   padding: 20px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: stretch;
+  gap: 20px;
   min-height: 100%;
 }
 
 .profile-card {
-  width: 100%;
-  max-width: 800px;
+  flex: 1;
+  max-width: 500px;
+  min-width: 400px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-radius: 8px;
   padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 600px;
+}
+
+.left-card {
+  align-items: center;
+}
+
+.right-card {
+  align-items: stretch;
 }
 
 .avatar-wrapper {
+  margin: 40px 0;
+  width: 100%;
   display: flex;
   justify-content: center;
-  margin-bottom: 30px;
+  align-items: center;
 }
 
 .avatar-wrapper :deep(.el-avatar) {
@@ -200,19 +294,21 @@ const submitVerify = () => {
 }
 
 .info-list {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px;
+  padding: 0 40px;
 }
 
 .info-item {
+  padding: 10px 0;
   display: flex;
   align-items: center;
-  font-size: 16px;
 }
 
 .info-item .label {
-  width: 80px;
+  width: 90px;
   color: #606266;
 }
 
@@ -237,5 +333,61 @@ const submitVerify = () => {
 
 :deep(.el-form-item) {
   margin-bottom: 20px;
+}
+
+.unverified-tips {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.empty-text {
+  color: #909399;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.student-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #303133;
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+.info-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  align-content: flex-start;
+}
+
+.grid-item {
+  display: flex;
+  align-items: center;
+}
+
+.grid-item .label {
+  width: 90px;
+}
+
+.grid-item .value {
+  color: #303133;
+  font-size: 14px;
 }
 </style>
