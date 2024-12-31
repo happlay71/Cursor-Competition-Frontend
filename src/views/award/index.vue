@@ -18,7 +18,7 @@
 
     <!-- 表格区域 -->
     <el-table :data="awardList" border style="width: 100%">
-      <el-table-column prop="applicant" label="申请人" width="120" />
+      <el-table-column prop="applicant" label="申请人ID" width="120" />
       <el-table-column prop="competitionName" label="竞赛名称" min-width="150" />
       <el-table-column prop="competitionLevel" label="获奖等级" width="120" />
       <el-table-column prop="competitionRanking" label="获奖名次" width="120" />
@@ -396,7 +396,7 @@ onMounted(() => {
 }
 
 :deep(.el-table__row) {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255);
 }
 
 :deep(.el-table__row:hover) {

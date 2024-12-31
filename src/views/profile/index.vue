@@ -47,6 +47,12 @@ const userStore = useUserStore()
   display: flex;
   justify-content: center;
   align-items: flex-start;
+
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .profile-card {

@@ -230,12 +230,23 @@ const handleCommand = (command) => {
   flex: 1;
   padding: 20px;
   margin-top: 60px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
   min-height: calc(100vh - 60px);
   overflow: auto;
   border-radius: 8px;
   margin: 80px 20px 20px;
+
+  height: 60px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 240px;
+  z-index: 1000;
 }
 
 :deep(.el-menu-item .el-icon) {
