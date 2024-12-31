@@ -44,24 +44,44 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right">
         <template #default="scope">
-          <el-button
-            v-if="scope.row.status === 0"
-            type="primary"
-            size="small"
-            @click="handleEdit(scope.row)"
-          >
-            修改
-          </el-button>
-          <el-button
-            v-if="scope.row.status === 0"
-            type="danger"
-            size="small"
-            @click="handleDelete(scope.row.id)"
-          >
-            删除
-          </el-button>
+          <div class="operation-buttons">
+            <el-button
+              v-if="scope.row.status === 0"
+              type="primary"
+              size="small"
+              @click="handleEdit(scope.row)"
+            >
+              修改
+            </el-button>
+            <el-button
+              v-if="scope.row.status === 0"
+              type="danger"
+              size="small"
+              @click="handleDelete(scope.row.id)"
+            >
+              删除
+            </el-button>
+          </div>
+          <div class="operation-buttons">
+            <el-dropdown
+              v-if="isAdmin && scope.row.status === 0"
+              @command="(command) => handleAudit(scope.row.id, command)"
+              class="audit-dropdown"
+            >
+              <el-button type="warning" size="small">
+                审核
+                <!-- <el-icon class="el-icon--right"><arrow-down /></el-icon> -->
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="approve">通过</el-dropdown-item>
+                  <el-dropdown-item command="reject">驳回</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -142,10 +162,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { selectAward, saveAward, deleteAward } from '@/api/award'
+import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
+
+const userStore = useUserStore()
+const isAdmin = computed(() => userStore.isAdmin)
 
 // 查询参数
 const queryParams = reactive({
@@ -342,6 +366,31 @@ const formatDate = (date) => {
   return dayjs(date).format('YYYY-MM-DD')
 }
 
+// 添加审核方法
+const handleAudit = async (id, action) => {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch('/api/award/auditAward', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        token: token,
+      },
+      body: `awardId=${id}&action=${action}`,
+    })
+    const data = await res.json()
+    if (data.code === 0) {
+      ElMessage.success('审核操作成功')
+      handleQuery()
+    } else {
+      ElMessage.error(data.message || '审核操作失败')
+    }
+  } catch (error) {
+    console.error('审核错误:', error)
+    ElMessage.error('审核操作失败')
+  }
+}
+
 // 初始化
 onMounted(() => {
   handleQuery()
@@ -431,5 +480,22 @@ onMounted(() => {
 :deep(.el-input),
 :deep(.el-date-picker) {
   width: 100%;
+}
+
+.operation-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  padding-bottom: 5px;
+}
+
+.operation-buttons .el-button {
+  margin: 0;
+}
+
+.audit-dropdown {
+  margin: 0;
 }
 </style>
