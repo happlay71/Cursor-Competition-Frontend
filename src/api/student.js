@@ -39,9 +39,9 @@ export function saveStudent(data) {
 export function toggleStudentStatus(id, status) {
   return request({
     url: '/api/student/status',
-    method: 'put',
-    data: {
-      id,
+    method: 'post',
+    params: {
+      id: Number(id),
       status,
     },
   })

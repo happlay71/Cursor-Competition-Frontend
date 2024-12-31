@@ -67,22 +67,24 @@
       <el-table-column prop="status" label="账号状态" width="100">
         <template #default="{ row }">
           <el-tag :type="row.status === 0 ? 'success' : 'danger'">
-            {{ row.status === 0 ? '已启用' : '未使用' }}
+            {{ row.status === 0 ? '已使用' : '未使用' }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column label="操作" fixed="right" width="180">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-button size="small" type="primary" @click="handleView(row)"> 查看 </el-button>
-            <el-button size="small" type="warning" @click="handleEdit(row)"> 编辑 </el-button>
+            <el-button size="small" type="primary" @click="handleView(row)">查看</el-button>
+            <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
             <el-button
+              v-if="row.certification === 1"
               size="small"
               :type="row.status === 0 ? 'danger' : 'success'"
               @click="handleToggleStatus(row)"
             >
               {{ row.status === 0 ? '禁用' : '启用' }}
             </el-button>
+            <el-button v-else size="small" type="info" disabled> 未认证 </el-button>
           </div>
         </template>
       </el-table-column>
@@ -403,7 +405,7 @@ getStudentList()
 
 .operation-buttons {
   display: flex;
-  gap: 8px;
+  gap: 0px;
 }
 
 .operation-buttons .el-button {
