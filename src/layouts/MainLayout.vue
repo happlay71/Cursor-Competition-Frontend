@@ -1,5 +1,6 @@
 <template>
   <div class="layout-container">
+    <div class="gradient-bg"></div>
     <!-- 左侧导航栏 -->
     <div class="sidebar">
       <div class="logo">竞赛获奖系统</div>
@@ -93,15 +94,42 @@ const handleCommand = (command) => {
   display: flex;
   height: 100vh;
   width: 100%;
+  min-width: 1200px;
+  overflow: auto;
+  position: relative;
+}
+
+.gradient-bg {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(240, 248, 255, 1) 0%,
+    rgba(230, 230, 250, 1) 25%,
+    rgba(240, 255, 255, 1) 50%,
+    rgba(245, 245, 255, 1) 75%,
+    rgba(240, 248, 255, 1) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientBg 15s ease infinite;
+  z-index: 0;
 }
 
 .sidebar {
   width: 240px;
+  min-width: 240px;
   height: 100%;
-  background-color: #304156;
-  color: #fff;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid rgba(255, 255, 255, 0.5);
+  color: #333;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1001;
 }
 
 .logo {
@@ -110,8 +138,10 @@ const handleCommand = (command) => {
   text-align: center;
   font-size: 18px;
   font-weight: bold;
-  color: #fff;
-  background-color: #2b3649;
+  color: #6e78c8;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .menu {
@@ -125,33 +155,42 @@ const handleCommand = (command) => {
 }
 
 :deep(.el-menu-item) {
-  color: #bfcbd9;
+  color: #333;
 }
 
 :deep(.el-menu-item.is-active) {
-  color: #409eff;
-  background-color: #263445;
+  color: #6e78c8;
+  background: rgba(110, 120, 200, 0.1);
 }
 
 :deep(.el-menu-item:hover) {
-  background-color: #263445;
+  background: rgba(110, 120, 200, 0.1);
 }
 
 .main {
   flex: 1;
+  margin-left: 240px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-width: 960px;
+  position: relative;
+  z-index: 1;
 }
 
 .header {
   height: 60px;
-  background-color: #fff;
-  border-bottom: 1px solid #dcdfe6;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding: 0 20px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 240px;
+  z-index: 1000;
 }
 
 .header-right {
@@ -163,24 +202,53 @@ const handleCommand = (command) => {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: 0 8px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  transition: background-color 0.3s;
+}
+
+.user-info:hover {
+  background: rgba(110, 120, 200, 0.1);
+}
+
+.avatar {
+  background: #6e78c8;
+  color: #fff;
 }
 
 .username {
   margin-left: 8px;
   font-size: 14px;
-  color: #606266;
+  color: #333;
 }
 
 .content {
   flex: 1;
   padding: 20px;
+  margin-top: 60px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  min-height: calc(100vh - 60px);
   overflow: auto;
-  background-color: #f0f2f5;
+  border-radius: 8px;
+  margin: 80px 20px 20px;
 }
 
 :deep(.el-menu-item .el-icon) {
   margin-right: 16px;
   font-size: 18px;
+  color: #6e78c8;
+}
+
+@keyframes gradientBg {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 </style>
