@@ -11,8 +11,6 @@
         <div class="info-item">
           <span class="label">账号：</span>
           <span class="value">{{ userAccount }}</span>
-        </div>
-        <div class="info-item">
           <span class="label">昵称：</span>
           <span class="value">{{ username }}</span>
         </div>
@@ -21,13 +19,12 @@
           <el-tag :type="status === 0 ? 'success' : 'danger'">
             {{ status === 0 ? '已启用' : '已禁用' }}
           </el-tag>
-        </div>
-        <div class="info-item">
           <span class="label">身份：</span>
           <el-tag :type="isAdmin ? 'danger' : 'success'">
             {{ isAdmin ? '管理员' : '普通用户' }}
           </el-tag>
         </div>
+
         <div class="info-item">
           <span class="label">学生认证：</span>
           <el-tag :type="isVerified ? 'success' : 'warning'">
@@ -70,7 +67,7 @@
           </div>
           <div class="grid-item">
             <span class="label">专业：</span>
-            <span class="value">{{ studentInfo.majorName }}</span>
+            <span class="value">{{ studentInfo.profession }}</span>
           </div>
           <div class="grid-item">
             <span class="label">性别：</span>
@@ -140,6 +137,7 @@ const isVerified = ref(false)
 const dialogVisible = ref(false)
 const verifyFormRef = ref(null)
 const verifyForm = ref({
+  id: userStore.userInfo?.id,
   studentId: '',
   name: '',
   email: '',
@@ -150,7 +148,7 @@ const verifyForm = ref({
 const rules = {
   studentId: [
     { required: true, message: '请输入学号', trigger: 'blur' },
-    { pattern: /^\d{8,12}$/, message: '请输入8-12位数字学号', trigger: 'blur' },
+    { pattern: /^\d{7,12}$/, message: '请输入8-12位数字学号', trigger: 'blur' },
   ],
   name: [
     { required: true, message: '请输入姓名', trigger: 'blur' },
@@ -176,14 +174,18 @@ const submitVerify = () => {
   verifyFormRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        // TODO: 调用后端认证接口
-        const res = await fetch('/api/user/verify', {
+        const token = localStorage.getItem('token')
+        const formData = {
+          ...verifyForm.value,
+          id: userStore.userInfo?.id,
+        }
+        const res = await fetch('/api/student/verify', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: localStorage.getItem('token'),
+            token: token,
           },
-          body: JSON.stringify(verifyForm.value),
+          body: JSON.stringify(formData),
         })
         const data = await res.json()
         if (data.code === 0) {
@@ -207,8 +209,8 @@ const studentInfo = ref({
   studentId: '',
   name: '',
   grade: '',
-  majorName: '',
-  gender: null,
+  profession: '',
+  gender: '',
   email: '',
   phone: '',
 })
@@ -216,10 +218,10 @@ const studentInfo = ref({
 // 获取学生信息
 const getStudentInfo = async () => {
   try {
-    // TODO: 调用后端接口获取学生信息
+    const token = localStorage.getItem('token')
     const res = await fetch('/api/student/info', {
       headers: {
-        Authorization: localStorage.getItem('token'),
+        token: token,
       },
     })
     const data = await res.json()
@@ -250,7 +252,7 @@ onMounted(() => {
 
 .profile-card {
   flex: 1;
-  max-width: 500px;
+  max-width: 580px;
   min-width: 400px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
@@ -308,13 +310,15 @@ onMounted(() => {
 }
 
 .info-item .label {
-  width: 90px;
+  width: 50px;
   color: #606266;
+  margin-left: 60px;
 }
 
 .info-item .value {
   color: #303133;
   flex: 1;
+  margin-right: 50px;
 }
 
 .verify-btn {
@@ -333,6 +337,11 @@ onMounted(() => {
 
 :deep(.el-form-item) {
   margin-bottom: 20px;
+}
+
+:deep(.el-tag--light) {
+  margin-left: 10px;
+  margin-right: 25px;
 }
 
 .unverified-tips {
@@ -383,7 +392,7 @@ onMounted(() => {
 }
 
 .grid-item .label {
-  width: 90px;
+  width: 60px;
 }
 
 .grid-item .value {
