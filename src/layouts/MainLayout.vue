@@ -26,6 +26,10 @@
             <el-icon><School /></el-icon>
             <span>专业信息</span>
           </el-menu-item>
+          <el-menu-item index="/student">
+            <el-icon><Avatar /></el-icon>
+            <span>学生信息</span>
+          </el-menu-item>
         </template>
         <el-menu-item index="/profile">
           <el-icon><UserFilled /></el-icon>
@@ -67,7 +71,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Trophy, UserFilled, User, List, Collection, School } from '@element-plus/icons-vue'
+import { Trophy, UserFilled, User, List, Collection, School, Avatar } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 

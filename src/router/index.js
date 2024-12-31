@@ -58,6 +58,12 @@ const router = createRouter({
           component: () => import('@/views/major/index.vue'),
           meta: { requiresAdmin: true },
         },
+        {
+          path: 'student',
+          name: 'student',
+          component: () => import('@/views/student/index.vue'),
+          meta: { requiresAdmin: true },
+        },
       ],
     },
   ],
