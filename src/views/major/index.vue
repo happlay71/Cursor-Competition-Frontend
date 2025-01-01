@@ -10,28 +10,10 @@
             clearable
             style="width: 200px"
           />
-          <el-input
-            v-model="searchForm.code"
-            placeholder="请输入专业代码"
-            clearable
-            style="width: 200px"
-          />
-          <el-select
-            v-model="searchForm.department"
-            placeholder="所属院系"
-            clearable
-            style="width: 200px"
-          >
-            <el-option
-              v-for="item in departmentOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>
       </div>
@@ -39,16 +21,12 @@
 
     <!-- 表格区域 -->
     <el-table :data="tableData" border style="width: 100%" v-loading="loading">
-      <el-table-column prop="name" label="专业名称" width="200" />
-      <el-table-column prop="code" label="专业代码" width="120" />
-      <el-table-column prop="department" label="所属院系" width="180" />
-      <el-table-column prop="description" label="专业描述" min-width="200" />
-      <el-table-column prop="createTime" label="创建时间" width="180" />
-      <el-table-column prop="updateTime" label="更新时间" width="180" />
-      <el-table-column label="操作" fixed="right" width="180">
+      <el-table-column type="index" label="序号" width="80" align="center" />
+      <el-table-column prop="name" label="专业名称" min-width="200" align="center" />
+      <el-table-column prop="awardCount" label="获奖人数" width="120" align="center" />
+      <el-table-column label="操作" width="180" align="center" fixed="right">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-button size="small" type="primary" @click="handleView(row)">查看</el-button>
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
             <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </div>
@@ -69,7 +47,7 @@
       />
     </div>
 
-    <!-- 编辑对话框 -->
+    <!-- 查看/编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
       :title="dialogType === 'edit' ? '编辑专业信息' : '查看专业信息'"
@@ -86,26 +64,8 @@
         <el-form-item label="专业名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入专业名称" />
         </el-form-item>
-        <el-form-item label="专业代码" prop="code">
-          <el-input v-model="form.code" placeholder="请输入专业代码" />
-        </el-form-item>
-        <el-form-item label="所属院系" prop="department">
-          <el-select v-model="form.department" placeholder="请选择所属院系">
-            <el-option
-              v-for="item in departmentOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="专业描述" prop="description">
-          <el-input
-            v-model="form.description"
-            type="textarea"
-            rows="4"
-            placeholder="请输入专业描述"
-          />
+        <el-form-item label="获奖人数" prop="awardCount">
+          <el-input-number v-model="form.awardCount" :min="0" :disabled="true" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -123,22 +83,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { selectMajor, saveMajor, deleteMajor } from '@/api/major'
 
 // 搜索表单
 const searchForm = reactive({
   name: '',
-  code: '',
-  department: '',
 })
-
-// 院系选项
-const departmentOptions = [
-  { label: '计算机学院', value: 'computer' },
-  { label: '机械工程学院', value: 'mechanical' },
-  { label: '电气工程学院', value: 'electrical' },
-  { label: '经济管理学院', value: 'management' },
-  { label: '外国语学院', value: 'foreign' },
-]
 
 // 表格数据
 const tableData = ref([])
@@ -154,9 +104,7 @@ const formRef = ref(null)
 const form = reactive({
   id: '',
   name: '',
-  code: '',
-  department: '',
-  description: '',
+  awardCount: 0,
 })
 
 // 表单验证规则
@@ -165,12 +113,6 @@ const rules = {
     { required: true, message: '请输入专业名称', trigger: 'blur' },
     { min: 2, max: 50, message: '长度在2-50个字符之间', trigger: 'blur' },
   ],
-  code: [
-    { required: true, message: '请输入专业代码', trigger: 'blur' },
-    { pattern: /^\d{6,8}$/, message: '专业代码必须为6-8位数字', trigger: 'blur' },
-  ],
-  department: [{ required: true, message: '请选择所属院系', trigger: 'change' }],
-  description: [{ required: true, message: '请输入专业描述', trigger: 'blur' }],
 }
 
 // 获取专业列表
@@ -178,15 +120,23 @@ const getMajorList = async () => {
   loading.value = true
   try {
     const params = {
-      ...searchForm,
-      pageNo: currentPage.value,
       pageSize: pageSize.value,
+      pageNo: currentPage.value,
+      name: searchForm.name,
     }
-    // TODO: 调用API获取数据
-    loading.value = false
+    const res = await selectMajor(params)
+    if (res.code === 0 && res.data) {
+      tableData.value = res.data.list || []
+      total.value = res.data.totalCount || 0
+      currentPage.value = res.data.pageNo || 1
+      pageSize.value = res.data.pageSize || 10
+    } else {
+      ElMessage.error(res.message || '获取专业列表失败')
+    }
   } catch (error) {
     console.error('获取专业列表失败:', error)
     ElMessage.error('获取专业列表失败')
+  } finally {
     loading.value = false
   }
 }
@@ -199,9 +149,7 @@ const handleSearch = () => {
 
 // 重置搜索
 const resetSearch = () => {
-  Object.keys(searchForm).forEach((key) => {
-    searchForm[key] = ''
-  })
+  searchForm.name = ''
   handleSearch()
 }
 
@@ -226,6 +174,11 @@ const handleView = (row) => {
 // 编辑
 const handleEdit = (row) => {
   dialogType.value = 'edit'
+  // 先重置表单
+  Object.keys(form).forEach((key) => {
+    form[key] = ''
+  })
+  // 再赋值
   Object.assign(form, row)
   dialogVisible.value = true
 }
@@ -239,9 +192,13 @@ const handleDelete = (row) => {
   })
     .then(async () => {
       try {
-        // TODO: 调用删除API
-        ElMessage.success('删除成功')
-        getMajorList()
+        const res = await deleteMajor(row.id)
+        if (res.code === 0) {
+          ElMessage.success('删除成功')
+          getMajorList()
+        } else {
+          ElMessage.error(res.message || '删除失败')
+        }
       } catch (error) {
         console.error('删除失败:', error)
         ElMessage.error('删除失败')
@@ -257,16 +214,30 @@ const handleSubmit = () => {
   formRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        // TODO: 调用保存API
-        ElMessage.success('保存成功')
-        dialogVisible.value = false
-        getMajorList()
+        const res = await saveMajor(form)
+        if (res.code === 0) {
+          ElMessage.success('保存成功')
+          dialogVisible.value = false
+          getMajorList()
+        } else {
+          ElMessage.error(res.message || '保存失败')
+        }
       } catch (error) {
         console.error('保存失败:', error)
         ElMessage.error('保存失败')
       }
     }
   })
+}
+
+// 新增
+const handleAdd = () => {
+  dialogType.value = 'edit'
+  // 重置表单数据
+  Object.keys(form).forEach((key) => {
+    form[key] = ''
+  })
+  dialogVisible.value = true
 }
 
 // 初始化
@@ -306,10 +277,14 @@ getMajorList()
 :deep(.el-table) {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
+  margin-bottom: 20px;
 }
 
 .pagination-wrapper {
-  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 15px;
   display: flex;
   justify-content: center;
 }
@@ -317,6 +292,7 @@ getMajorList()
 .operation-buttons {
   display: flex;
   gap: 8px;
+  justify-content: center;
 }
 
 .operation-buttons .el-button {

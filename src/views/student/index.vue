@@ -55,7 +55,7 @@
           {{ row.gender === 1 ? '男' : '女' }}
         </template>
       </el-table-column>
-      <el-table-column prop="email" label="邮箱" width="200" />
+      <el-table-column prop="email" label="邮箱" min-width="200" />
       <el-table-column prop="phone" label="电话" width="130" />
       <el-table-column prop="certification" label="认证状态" width="100">
         <template #default="{ row }">
@@ -71,10 +71,9 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" fixed="right" width="180">
+      <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-button size="small" type="primary" @click="handleView(row)">查看</el-button>
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
             <el-button
               v-if="row.certification === 1"
@@ -90,7 +89,6 @@
       </el-table-column>
     </el-table>
 
-    <!-- 分页 -->
     <div class="pagination-wrapper">
       <el-pagination
         v-model:current-page="currentPage"
@@ -132,7 +130,7 @@
         <el-form-item label="性别" prop="gender">
           <el-radio-group v-model="form.gender">
             <el-radio :label="1">男</el-radio>
-            <el-radio :label="2">女</el-radio>
+            <el-radio :label="0">女</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
@@ -275,17 +273,18 @@ const handleCurrentChange = (val) => {
   getStudentList()
 }
 
-// 查看学生信息
-const handleView = (row) => {
-  dialogType.value = 'view'
-  Object.assign(form, row)
-  dialogVisible.value = true
-}
-
 // 编辑学生信息
 const handleEdit = (row) => {
   dialogType.value = 'edit'
-  Object.assign(form, row)
+  // 先重置表单
+  Object.keys(form).forEach((key) => {
+    form[key] = ''
+  })
+  // 再赋值，确保性别值为数字类型
+  Object.assign(form, {
+    ...row,
+    gender: Number(row.gender), // 确保性别值为数字类型
+  })
   dialogVisible.value = true
 }
 
@@ -405,11 +404,33 @@ getStudentList()
 
 .operation-buttons {
   display: flex;
-  gap: 0px;
+  gap: 15px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .operation-buttons .el-button {
   padding: 4px 8px;
   min-height: 28px;
+  margin: 0;
+}
+
+:deep(.el-table .cell) {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+:deep(.el-table) {
+  overflow: visible;
+}
+
+:deep(.el-table__fixed-right) {
+  height: 100% !important;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+:deep(.el-table__fixed-right::before) {
+  background-color: var(--el-table-border-color);
 }
 </style>
