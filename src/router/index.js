@@ -49,7 +49,7 @@ const router = createRouter({
         {
           path: 'competition-level',
           name: 'competition-level',
-          component: () => import('@/views/competition-level/index.vue'),
+          component: () => import('@/views/level/index.vue'),
           meta: { requiresAdmin: true },
         },
         {
