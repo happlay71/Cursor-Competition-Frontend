@@ -5,26 +5,21 @@
       <div class="search-form">
         <div class="search-inputs">
           <el-input
-            v-model="searchForm.teamName"
-            placeholder="请输入团队名称"
+            v-model="searchForm.studentName"
+            placeholder="请输入学生姓名"
             clearable
             style="width: 200px"
           />
           <el-input
-            v-model="searchForm.leader"
-            placeholder="请输入队长姓名"
-            clearable
-            style="width: 200px"
-          />
-          <el-input
-            v-model="searchForm.competition"
-            placeholder="请输入竞赛名称"
+            v-model="searchForm.awardId"
+            placeholder="请输入获奖编号"
             clearable
             style="width: 200px"
           />
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>
       </div>
@@ -32,16 +27,25 @@
 
     <!-- 表格区域 -->
     <el-table :data="tableData" border style="width: 100%" v-loading="loading">
-      <el-table-column prop="teamName" label="团队名称" width="150" />
-      <el-table-column prop="leader" label="队长" width="120" />
-      <el-table-column prop="members" label="团队成员" min-width="200" />
-      <el-table-column prop="competition" label="参赛竞赛" width="200" />
-      <el-table-column prop="award" label="获奖等级" width="120" />
-      <el-table-column prop="createTime" label="创建时间" width="180" />
-      <el-table-column label="操作" fixed="right" width="180">
+      <el-table-column type="index" label="序号" width="80" />
+      <el-table-column prop="studentName" label="学生姓名" min-width="120" />
+      <el-table-column prop="awardId" label="获奖编号" width="120" />
+      <el-table-column prop="rankingInTeam" label="团队排名" width="100">
+        <template #default="{ row }"> 第{{ row.rankingInTeam }}名 </template>
+      </el-table-column>
+      <el-table-column prop="createTime" label="创建时间" width="160">
+        <template #default="{ row }">
+          {{ row.createTime ? new Date(row.createTime).toLocaleString() : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="updateTime" label="更新时间" width="160">
+        <template #default="{ row }">
+          {{ row.updateTime ? new Date(row.updateTime).toLocaleString() : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-button size="small" type="primary" @click="handleView(row)">查看</el-button>
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
             <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </div>
@@ -76,24 +80,14 @@
         label-width="100px"
         :disabled="dialogType === 'view'"
       >
-        <el-form-item label="团队名称" prop="teamName">
-          <el-input v-model="form.teamName" placeholder="请输入团队名称" />
+        <el-form-item label="学生姓名" prop="studentName">
+          <el-input v-model="form.studentName" placeholder="请输入学生姓名" />
         </el-form-item>
-        <el-form-item label="队长" prop="leader">
-          <el-input v-model="form.leader" placeholder="请输入队长姓名" />
+        <el-form-item label="获奖编号" prop="awardId">
+          <el-input-number v-model="form.awardId" :min="1" placeholder="请输入获奖编号" />
         </el-form-item>
-        <el-form-item label="团队成员" prop="members">
-          <el-input
-            v-model="form.members"
-            type="textarea"
-            placeholder="请输入团队成员，多个成员用逗号分隔"
-          />
-        </el-form-item>
-        <el-form-item label="参赛竞赛" prop="competition">
-          <el-input v-model="form.competition" placeholder="请输入竞赛名称" />
-        </el-form-item>
-        <el-form-item label="获奖等级" prop="award">
-          <el-input v-model="form.award" placeholder="请输入获奖等级" />
+        <el-form-item label="团队排名" prop="rankingInTeam">
+          <el-input-number v-model="form.rankingInTeam" :min="1" placeholder="请输入团队排名" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -111,12 +105,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { selectTeam, saveTeam, deleteTeam } from '@/api/team'
 
 // 搜索表单
 const searchForm = reactive({
-  teamName: '',
-  leader: '',
-  competition: '',
+  studentName: '',
+  awardId: '',
 })
 
 // 表格数据
@@ -132,23 +126,22 @@ const dialogType = ref('edit')
 const formRef = ref(null)
 const form = reactive({
   id: '',
-  teamName: '',
-  leader: '',
-  members: '',
-  competition: '',
-  award: '',
+  studentName: '',
+  awardId: '',
+  rankingInTeam: 1,
 })
 
 // 表单验证规则
 const rules = {
-  teamName: [
-    { required: true, message: '请输入团队名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在2-50个字符之间', trigger: 'blur' },
+  studentName: [
+    { required: true, message: '请输入学生姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在2-20个字符之间', trigger: 'blur' },
   ],
-  leader: [{ required: true, message: '请输入队长姓名', trigger: 'blur' }],
-  members: [{ required: true, message: '请输入团队成员', trigger: 'blur' }],
-  competition: [{ required: true, message: '请输入竞赛名称', trigger: 'blur' }],
-  award: [{ required: true, message: '请输入获奖等级', trigger: 'blur' }],
+  awardId: [{ required: true, message: '请输入获奖编号', trigger: 'blur' }],
+  rankingInTeam: [
+    { required: true, message: '请输入团队排名', trigger: 'blur' },
+    { type: 'number', min: 1, message: '排名必须大于0', trigger: 'blur' },
+  ],
 }
 
 // 获取团队列表
@@ -156,15 +149,26 @@ const getTeamList = async () => {
   loading.value = true
   try {
     const params = {
-      ...searchForm,
       pageNo: currentPage.value,
       pageSize: pageSize.value,
+      queryParams: {
+        studentName: searchForm.studentName,
+        awardId: searchForm.awardId,
+      },
     }
-    // TODO: 调用API获取数据
-    loading.value = false
+    const res = await selectTeam(params)
+    if (res.code === 0 && res.data) {
+      tableData.value = res.data.list || []
+      total.value = res.data.totalCount || 0
+      currentPage.value = res.data.pageNo || 1
+      pageSize.value = res.data.pageSize || 10
+    } else {
+      ElMessage.error(res.message || '获取列表失败')
+    }
   } catch (error) {
-    console.error('获取团队列表失败:', error)
-    ElMessage.error('获取团队列表失败')
+    console.error('获取列表失败:', error)
+    ElMessage.error('获取列表失败')
+  } finally {
     loading.value = false
   }
 }
@@ -194,16 +198,14 @@ const handleCurrentChange = (val) => {
   getTeamList()
 }
 
-// 查看
-const handleView = (row) => {
-  dialogType.value = 'view'
-  Object.assign(form, row)
-  dialogVisible.value = true
-}
-
 // 编辑
 const handleEdit = (row) => {
   dialogType.value = 'edit'
+  // 先重置表单
+  Object.keys(form).forEach((key) => {
+    form[key] = key === 'rankingInTeam' ? 1 : ''
+  })
+  // 再赋值
   Object.assign(form, row)
   dialogVisible.value = true
 }
@@ -217,9 +219,13 @@ const handleDelete = (row) => {
   })
     .then(async () => {
       try {
-        // TODO: 调用删除API
-        ElMessage.success('删除成功')
-        getTeamList()
+        const res = await deleteTeam(row.id)
+        if (res.code === 0) {
+          ElMessage.success('删除成功')
+          getTeamList()
+        } else {
+          ElMessage.error(res.message || '删除失败')
+        }
       } catch (error) {
         console.error('删除失败:', error)
         ElMessage.error('删除失败')
@@ -235,16 +241,30 @@ const handleSubmit = () => {
   formRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        // TODO: 调用保存API
-        ElMessage.success('保存成功')
-        dialogVisible.value = false
-        getTeamList()
+        const res = await saveTeam(form)
+        if (res.code === 0) {
+          ElMessage.success('保存成功')
+          dialogVisible.value = false
+          getTeamList()
+        } else {
+          ElMessage.error(res.message || '保存失败')
+        }
       } catch (error) {
         console.error('保存失败:', error)
         ElMessage.error('保存失败')
       }
     }
   })
+}
+
+// 新增
+const handleAdd = () => {
+  dialogType.value = 'edit'
+  // 重置表单数据
+  Object.keys(form).forEach((key) => {
+    form[key] = key === 'rankingInTeam' ? 1 : ''
+  })
+  dialogVisible.value = true
 }
 
 // 初始化
@@ -284,21 +304,47 @@ getTeamList()
 :deep(.el-table) {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
+  margin-bottom: 20px;
 }
 
 .pagination-wrapper {
-  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 15px;
   display: flex;
   justify-content: center;
 }
 
 .operation-buttons {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .operation-buttons .el-button {
   padding: 4px 8px;
   min-height: 28px;
+  margin: 0;
+}
+
+:deep(.el-table .cell) {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+:deep(.el-table) {
+  overflow: visible;
+}
+
+:deep(.el-table__fixed-right) {
+  height: 100% !important;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+:deep(.el-table__fixed-right::before) {
+  background-color: var(--el-table-border-color);
 }
 </style>

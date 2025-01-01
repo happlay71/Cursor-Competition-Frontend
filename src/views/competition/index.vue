@@ -10,28 +10,10 @@
             clearable
             style="width: 200px"
           />
-          <el-input
-            v-model="searchForm.organizer"
-            placeholder="请输入主办方"
-            clearable
-            style="width: 200px"
-          />
-          <el-select
-            v-model="searchForm.level"
-            placeholder="竞赛级别"
-            clearable
-            style="width: 200px"
-          >
-            <el-option
-              v-for="item in levelOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>
       </div>
@@ -39,22 +21,34 @@
 
     <!-- 表格区域 -->
     <el-table :data="tableData" border style="width: 100%" v-loading="loading">
-      <el-table-column prop="name" label="竞赛名称" min-width="200" />
-      <el-table-column prop="organizer" label="主办方" width="200" />
-      <el-table-column prop="level" label="竞赛级别" width="120" />
-      <el-table-column prop="startTime" label="开始时间" width="180" />
-      <el-table-column prop="endTime" label="结束时间" width="180" />
-      <el-table-column prop="status" label="状态" width="100">
+      <el-table-column type="index" label="序号" width="80" />
+      <el-table-column prop="name" label="竞赛名称" min-width="150" />
+      <el-table-column prop="description" label="竞赛描述" min-width="200">
         <template #default="{ row }">
-          <el-tag :type="row.status === 1 ? 'success' : row.status === 0 ? 'warning' : 'info'">
-            {{ row.status === 1 ? '进行中' : row.status === 0 ? '未开始' : '已结束' }}
-          </el-tag>
+          <div class="description-cell">{{ row.description }}</div>
         </template>
       </el-table-column>
-      <el-table-column label="操作" fixed="right" width="180">
+      <el-table-column prop="url" label="官网链接" min-width="150" show-overflow-tooltip>
+        <template #default="{ row }">
+          <el-link type="primary" :href="row.url" target="_blank" v-if="row.url">{{
+            row.url
+          }}</el-link>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="createTime" label="创建时间" width="160">
+        <template #default="{ row }">
+          {{ row.createTime ? new Date(row.createTime).toLocaleString() : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="updateTime" label="更新时间" width="160">
+        <template #default="{ row }">
+          {{ row.updateTime ? new Date(row.updateTime).toLocaleString() : '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" width="150" fixed="right">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-button size="small" type="primary" @click="handleView(row)">查看</el-button>
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
             <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </div>
@@ -92,42 +86,16 @@
         <el-form-item label="竞赛名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入竞赛名称" />
         </el-form-item>
-        <el-form-item label="主办方" prop="organizer">
-          <el-input v-model="form.organizer" placeholder="请输入主办方" />
-        </el-form-item>
-        <el-form-item label="竞赛级别" prop="level">
-          <el-select v-model="form.level" placeholder="请选择竞赛级别">
-            <el-option
-              v-for="item in levelOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="开始时间" prop="startTime">
-          <el-date-picker
-            v-model="form.startTime"
-            type="datetime"
-            placeholder="请选择开始时间"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="结束时间" prop="endTime">
-          <el-date-picker
-            v-model="form.endTime"
-            type="datetime"
-            placeholder="请选择结束时间"
-            style="width: 100%"
-          />
-        </el-form-item>
         <el-form-item label="竞赛描述" prop="description">
           <el-input
             v-model="form.description"
             type="textarea"
-            rows="4"
+            :rows="3"
             placeholder="请输入竞赛描述"
           />
+        </el-form-item>
+        <el-form-item label="官网链接" prop="url">
+          <el-input v-model="form.url" placeholder="请输入官网链接" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -145,21 +113,12 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { selectCompetition, saveCompetition, deleteCompetition } from '@/api/competition'
 
 // 搜索表单
 const searchForm = reactive({
   name: '',
-  organizer: '',
-  level: '',
 })
-
-// 竞赛级别选项
-const levelOptions = [
-  { label: '国家级', value: 'national' },
-  { label: '省级', value: 'provincial' },
-  { label: '市级', value: 'city' },
-  { label: '校级', value: 'school' },
-]
 
 // 表格数据
 const tableData = ref([])
@@ -175,39 +134,48 @@ const formRef = ref(null)
 const form = reactive({
   id: '',
   name: '',
-  organizer: '',
-  level: '',
-  startTime: '',
-  endTime: '',
   description: '',
+  url: '',
 })
 
 // 表单验证规则
 const rules = {
   name: [
     { required: true, message: '请输入竞赛名称', trigger: 'blur' },
-    { min: 2, max: 100, message: '长度在2-100个字符之间', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在2-50个字符之间', trigger: 'blur' },
   ],
-  organizer: [{ required: true, message: '请输入主办方', trigger: 'blur' }],
-  level: [{ required: true, message: '请选择竞赛级别', trigger: 'change' }],
-  startTime: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
-  endTime: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  description: [{ required: true, message: '请输入竞赛描述', trigger: 'blur' }],
+  url: [
+    {
+      pattern: /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/,
+      message: '请输入正确的URL格式',
+      trigger: 'blur',
+    },
+  ],
 }
 
-// 获取竞赛列表
+// 获取列表
 const getCompetitionList = async () => {
   loading.value = true
   try {
     const params = {
-      ...searchForm,
       pageNo: currentPage.value,
       pageSize: pageSize.value,
+      name: searchForm.name,
     }
-    // TODO: 调用API获取数据
-    loading.value = false
+    const res = await selectCompetition(params)
+    if (res.code === 0 && res.data) {
+      tableData.value = res.data.list || []
+      total.value = res.data.totalCount || 0
+      currentPage.value = res.data.pageNo || 1
+      pageSize.value = res.data.pageSize || 10
+    } else {
+      ElMessage.error(res.message || '获取列表失败')
+    }
   } catch (error) {
-    console.error('获取竞赛列表失败:', error)
-    ElMessage.error('获取竞赛列表失败')
+    console.error('获取列表失败:', error)
+    ElMessage.error('获取列表失败')
+  } finally {
     loading.value = false
   }
 }
@@ -220,9 +188,7 @@ const handleSearch = () => {
 
 // 重置搜索
 const resetSearch = () => {
-  Object.keys(searchForm).forEach((key) => {
-    searchForm[key] = ''
-  })
+  searchForm.name = ''
   handleSearch()
 }
 
@@ -237,16 +203,14 @@ const handleCurrentChange = (val) => {
   getCompetitionList()
 }
 
-// 查看
-const handleView = (row) => {
-  dialogType.value = 'view'
-  Object.assign(form, row)
-  dialogVisible.value = true
-}
-
 // 编辑
 const handleEdit = (row) => {
   dialogType.value = 'edit'
+  // 先重置表单
+  Object.keys(form).forEach((key) => {
+    form[key] = ''
+  })
+  // 再赋值
   Object.assign(form, row)
   dialogVisible.value = true
 }
@@ -260,9 +224,13 @@ const handleDelete = (row) => {
   })
     .then(async () => {
       try {
-        // TODO: 调用删除API
-        ElMessage.success('删除成功')
-        getCompetitionList()
+        const res = await deleteCompetition(row.id)
+        if (res.code === 0) {
+          ElMessage.success('删除成功')
+          getCompetitionList()
+        } else {
+          ElMessage.error(res.message || '删除失败')
+        }
       } catch (error) {
         console.error('删除失败:', error)
         ElMessage.error('删除失败')
@@ -278,16 +246,30 @@ const handleSubmit = () => {
   formRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        // TODO: 调用保存API
-        ElMessage.success('保存成功')
-        dialogVisible.value = false
-        getCompetitionList()
+        const res = await saveCompetition(form)
+        if (res.code === 0) {
+          ElMessage.success('保存成功')
+          dialogVisible.value = false
+          getCompetitionList()
+        } else {
+          ElMessage.error(res.message || '保存失败')
+        }
       } catch (error) {
         console.error('保存失败:', error)
         ElMessage.error('保存失败')
       }
     }
   })
+}
+
+// 新增
+const handleAdd = () => {
+  dialogType.value = 'edit'
+  // 重置表单数据
+  Object.keys(form).forEach((key) => {
+    form[key] = ''
+  })
+  dialogVisible.value = true
 }
 
 // 初始化
@@ -327,21 +309,53 @@ getCompetitionList()
 :deep(.el-table) {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
+  margin-bottom: 20px;
 }
 
 .pagination-wrapper {
-  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 15px;
   display: flex;
   justify-content: center;
 }
 
 .operation-buttons {
   display: flex;
-  gap: 8px;
+  gap: 4px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
 }
 
 .operation-buttons .el-button {
   padding: 4px 8px;
   min-height: 28px;
+  margin: 0;
+}
+
+:deep(.el-table .cell) {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+:deep(.el-table) {
+  overflow: visible;
+}
+
+:deep(.el-table__fixed-right) {
+  height: 100% !important;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+:deep(.el-table__fixed-right::before) {
+  background-color: var(--el-table-border-color);
+}
+
+.description-cell {
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
 }
 </style>

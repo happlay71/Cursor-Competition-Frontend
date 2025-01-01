@@ -18,11 +18,18 @@
 
     <!-- 表格区域 -->
     <el-table :data="awardList" border style="width: 100%">
+      <el-table-column type="index" label="序号" width="80" />
+      <el-table-column prop="id" label="获奖ID" width="100" />
       <el-table-column prop="applicant" label="申请人ID" width="120" />
       <el-table-column prop="competitionName" label="竞赛名称" min-width="150" />
-      <el-table-column prop="competitionLevel" label="获奖等级" width="120" />
+      <el-table-column prop="competitionLevel" label="竞赛等级" width="120" />
       <el-table-column prop="competitionRanking" label="获奖名次" width="120" />
       <el-table-column prop="studentName" label="学生姓名" width="120" />
+      <el-table-column prop="team" label="团队ID" width="100">
+        <template #default="scope">
+          {{ scope.row.team || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="advisor" label="指导老师" width="120" />
       <el-table-column prop="awardYear" label="获奖年份" width="100" />
       <el-table-column prop="awardDate" label="获奖日期" width="180">
@@ -70,10 +77,7 @@
               @command="(command) => handleAudit(scope.row.id, command)"
               class="audit-dropdown"
             >
-              <el-button type="warning" size="small">
-                审核
-                <!-- <el-icon class="el-icon--right"><arrow-down /></el-icon> -->
-              </el-button>
+              <el-button type="warning" size="small"> 审核 </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="approve">通过</el-dropdown-item>
