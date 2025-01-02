@@ -4,12 +4,22 @@
     <div class="search-wrapper">
       <div class="search-form">
         <div class="search-inputs">
-          <el-input
-            v-model="searchForm.name"
-            placeholder="请输入竞赛名称"
-            clearable
-            style="width: 200px"
-          />
+          <el-form-item label="竞赛名称">
+            <el-select
+              v-model="searchForm.name"
+              placeholder="请选择竞赛名称"
+              clearable
+              filterable
+              style="width: 240px"
+            >
+              <el-option
+                v-for="name in competitionNameList"
+                :key="name"
+                :label="name"
+                :value="name"
+              />
+            </el-select>
+          </el-form-item>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
@@ -111,9 +121,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { selectCompetition, saveCompetition, deleteCompetition } from '@/api/competition'
+import {
+  selectCompetition,
+  saveCompetition,
+  deleteCompetition,
+  selectCompetitionName,
+} from '@/api/competition'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -276,8 +291,26 @@ const handleAdd = () => {
   dialogVisible.value = true
 }
 
+// 竞赛名称列表
+const competitionNameList = ref([])
+
+// 获取竞赛名称列表
+const getCompetitionNameList = async () => {
+  try {
+    const res = await selectCompetitionName()
+    if (res.code === 0) {
+      competitionNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取竞赛名称列表失败:', error)
+  }
+}
+
 // 初始化
-getCompetitionList()
+onMounted(() => {
+  getCompetitionNameList()
+  getCompetitionList()
+})
 </script>
 
 <style scoped>

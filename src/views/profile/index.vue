@@ -32,6 +32,10 @@
           </el-tag>
         </div>
       </div>
+      <div class="button-group">
+        <el-button type="primary" @click="handleEditInfo">修改信息</el-button>
+        <el-button type="warning" @click="handleEditPassword">修改密码</el-button>
+      </div>
     </el-card>
 
     <!-- 右侧卡片：学生信息 -->
@@ -51,7 +55,12 @@
 
       <!-- 已认证状态显示学生信息 -->
       <div v-else class="student-info">
-        <div class="section-title">学生信息</div>
+        <div class="section-title">
+          学生信息
+          <el-button type="primary" size="small" style="float: right" @click="handleEditStudent"
+            >修改信息</el-button
+          >
+        </div>
         <div class="info-grid">
           <div class="grid-item">
             <span class="label">学号：</span>
@@ -83,6 +92,58 @@
           </div>
         </div>
       </div>
+
+      <!-- 修改学生信息对话框 -->
+      <el-dialog
+        v-model="editStudentDialogVisible"
+        title="修改学生信息"
+        width="500px"
+        destroy-on-close
+      >
+        <el-form
+          ref="editStudentFormRef"
+          :model="editStudentForm"
+          :rules="studentRules"
+          label-width="80px"
+        >
+          <el-form-item label="学号" prop="studentId">
+            <el-input v-model="editStudentForm.studentId" placeholder="请输入学号" disabled />
+          </el-form-item>
+          <el-form-item label="姓名" prop="name">
+            <el-input v-model="editStudentForm.name" placeholder="请输入姓名" />
+          </el-form-item>
+          <el-form-item label="年级" prop="grade">
+            <el-input v-model="editStudentForm.grade" placeholder="请输入年级" />
+          </el-form-item>
+          <el-form-item label="专业" prop="profession">
+            <el-select
+              v-model="editStudentForm.profession"
+              placeholder="请选择专业"
+              style="width: 100%"
+            >
+              <el-option v-for="item in majorNameList" :key="item" :label="item" :value="item" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="性别" prop="gender">
+            <el-radio-group v-model="editStudentForm.gender">
+              <el-radio :label="1">男</el-radio>
+              <el-radio :label="0">女</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="editStudentForm.email" placeholder="请输入邮箱" />
+          </el-form-item>
+          <el-form-item label="电话" prop="phone">
+            <el-input v-model="editStudentForm.phone" placeholder="请输入电话" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="editStudentDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitEditStudent">确认</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </el-card>
 
     <!-- 认证对话框 -->
@@ -108,6 +169,70 @@
         </span>
       </template>
     </el-dialog>
+
+    <!-- 修改信息对话框 -->
+    <el-dialog v-model="editInfoDialogVisible" title="编辑用户信息" width="500px" destroy-on-close>
+      <el-form
+        ref="editInfoFormRef"
+        :model="editInfoForm"
+        :rules="editInfoRules"
+        label-width="80px"
+      >
+        <el-form-item label="账号" prop="userAccount">
+          <el-input v-model="editInfoForm.userAccount" placeholder="请输入用户账号" />
+        </el-form-item>
+        <el-form-item label="昵称" prop="username">
+          <el-input v-model="editInfoForm.username" placeholder="请输入用户昵称" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editInfoDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEditInfo">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 修改密码对话框 -->
+    <el-dialog v-model="editPasswordDialogVisible" title="修改密码" width="500px" destroy-on-close>
+      <el-form
+        ref="editPasswordFormRef"
+        :model="editPasswordForm"
+        :rules="editPasswordRules"
+        label-width="100px"
+      >
+        <el-form-item label="原密码" prop="oldPassword">
+          <el-input
+            v-model="editPasswordForm.oldPassword"
+            type="password"
+            placeholder="请输入原密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input
+            v-model="editPasswordForm.newPassword"
+            type="password"
+            placeholder="请输入新密码"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-input
+            v-model="editPasswordForm.confirmPassword"
+            type="password"
+            placeholder="请再次输入新密码"
+            show-password
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="editPasswordDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitEditPassword">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -115,6 +240,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
+import { saveUser } from '@/api/user'
+import { saveStudent } from '@/api/student'
+import { selectMajorName } from '@/api/major'
 
 const userStore = useUserStore()
 const userAccount = computed(() => userStore.userInfo?.userAccount)
@@ -234,10 +362,232 @@ const getStudentInfo = async () => {
   }
 }
 
+// 专业名称列表
+const majorNameList = ref([])
+
+// 获取专业名称列表
+const getMajorNameList = async () => {
+  try {
+    const res = await selectMajorName()
+    if (res.code === 0) {
+      majorNameList.value = res.data
+    }
+  } catch (error) {
+    console.error('获取专业名称列表失败:', error)
+  }
+}
+
 // 在页面加载时获取学生信息
 onMounted(() => {
   getStudentInfo()
+  getMajorNameList()
 })
+
+// 修改信息相关
+const editInfoDialogVisible = ref(false)
+const editInfoFormRef = ref(null)
+const editInfoForm = ref({
+  userAccount: '',
+  username: '',
+})
+
+const editInfoRules = {
+  userAccount: [
+    { required: true, message: '请输入用户账号', trigger: 'blur' },
+    { min: 4, max: 20, message: '账号长度在4-20个字符之间', trigger: 'blur' },
+  ],
+  username: [
+    { required: true, message: '请输入用户昵称', trigger: 'blur' },
+    { min: 2, max: 20, message: '昵称长度在2-20个字符之间', trigger: 'blur' },
+  ],
+}
+
+const handleEditInfo = () => {
+  editInfoForm.value.userAccount = userStore.userInfo?.userAccount || ''
+  editInfoForm.value.username = userStore.userInfo?.username || ''
+  editInfoDialogVisible.value = true
+}
+
+const submitEditInfo = () => {
+  editInfoFormRef.value?.validate(async (valid) => {
+    if (valid) {
+      try {
+        const token = localStorage.getItem('token')
+        let role = 'user'
+        try {
+          // 尝试从token中解析用户角色
+          const tokenData = JSON.parse(atob(token.split('.')[1]))
+          role = tokenData.role
+        } catch (error) {
+          console.error('解析token失败:', error)
+        }
+
+        // 调用保存用户信息的API
+        const res = await saveUser({
+          id: userStore.userInfo?.id,
+          userAccount: editInfoForm.value.userAccount,
+          username: editInfoForm.value.username,
+          role: role,
+        })
+
+        // 根据返回结果判断是否修改成功
+        if (res.code === 0) {
+          ElMessage.success('修改成功')
+          editInfoDialogVisible.value = false
+          // 更新userStore中的用户信息
+          userStore.setUserInfo({
+            ...userStore.userInfo,
+            userAccount: editInfoForm.value.userAccount,
+            username: editInfoForm.value.username,
+          })
+        } else {
+          ElMessage.error(res.message || '修改失败')
+        }
+      } catch (error) {
+        console.error('修改失败:', error)
+      }
+    }
+  })
+}
+
+// 修改密码相关
+const editPasswordDialogVisible = ref(false)
+const editPasswordFormRef = ref(null)
+const editPasswordForm = ref({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const editPasswordRules = {
+  oldPassword: [
+    { required: true, message: '请输入原密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在6-20个字符之间', trigger: 'blur' },
+  ],
+  newPassword: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度在6-20个字符之间', trigger: 'blur' },
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    {
+      validator: (rule, value, callback) => {
+        if (value !== editPasswordForm.value.newPassword) {
+          callback(new Error('两次输入的密码不一致'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'blur',
+    },
+  ],
+}
+
+const handleEditPassword = () => {
+  editPasswordForm.value = {
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  }
+  editPasswordDialogVisible.value = true
+}
+
+const submitEditPassword = () => {
+  editPasswordFormRef.value?.validate(async (valid) => {
+    if (valid) {
+      try {
+        const token = localStorage.getItem('token')
+        const res = await fetch('/api/user/updatePassword', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            token: token,
+          },
+          body: JSON.stringify({
+            id: userStore.userInfo?.id,
+            oldPassword: editPasswordForm.value.oldPassword,
+            newPassword: editPasswordForm.value.newPassword,
+          }),
+        })
+        const data = await res.json()
+        if (data.code === 0) {
+          ElMessage.success('修改成功，请重新登录')
+          editPasswordDialogVisible.value = false
+          // 退出登录
+          userStore.logout()
+          router.push('/login')
+        } else {
+          ElMessage.error(data.message || '修改失败')
+        }
+      } catch (error) {
+        console.error('修改失败:', error)
+      }
+    }
+  })
+}
+
+// 修改学生信息相关
+const editStudentDialogVisible = ref(false)
+const editStudentFormRef = ref(null)
+const editStudentForm = ref({
+  id: '',
+  studentId: '',
+  name: '',
+  grade: '',
+  profession: '',
+  gender: 1,
+  email: '',
+  phone: '',
+})
+
+const studentRules = {
+  studentId: [
+    { required: true, message: '请输入学号', trigger: 'blur' },
+    { pattern: /^\d{7,12}$/, message: '请输入7-12位数字学号', trigger: 'blur' },
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '姓名长度在2-20个字符之间', trigger: 'blur' },
+  ],
+  profession: [
+    { required: true, message: '请输入专业', trigger: 'blur' },
+    { min: 2, max: 50, message: '专业名称长度在2-50个字符之间', trigger: 'blur' },
+  ],
+  email: [
+    { required: true, message: '请输入邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
+  ],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式', trigger: 'blur' },
+  ],
+}
+
+const handleEditStudent = () => {
+  editStudentForm.value = { ...studentInfo.value }
+  editStudentDialogVisible.value = true
+}
+
+const submitEditStudent = () => {
+  editStudentFormRef.value?.validate(async (valid) => {
+    if (valid) {
+      try {
+        const res = await saveStudent(editStudentForm.value)
+        if (res.code === 0) {
+          ElMessage.success('修改成功')
+          editStudentDialogVisible.value = false
+          // 重新获取学生信息
+          await getStudentInfo()
+        } else {
+          ElMessage.error(res.message || '修改失败')
+        }
+      } catch (error) {
+        console.error('修改失败:', error)
+        ElMessage.error('修改失败')
+      }
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -398,5 +748,16 @@ onMounted(() => {
 .grid-item .value {
   color: #303133;
   font-size: 14px;
+}
+
+.button-group {
+  margin-top: 30px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.button-group .el-button {
+  width: 120px;
 }
 </style>

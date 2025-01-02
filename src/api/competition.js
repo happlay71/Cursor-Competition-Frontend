@@ -40,3 +40,11 @@ export function deleteCompetition(id) {
     },
   })
 }
+
+// 获取竞赛名称列表
+export function selectCompetitionName() {
+  return request({
+    url: '/api/competition/selectCompetitionName',
+    method: 'get',
+  })
+}

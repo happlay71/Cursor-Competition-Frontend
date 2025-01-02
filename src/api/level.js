@@ -52,3 +52,19 @@ export function deleteLevel(id) {
     },
   })
 }
+
+// 获取竞赛级别列表
+export function selectLevelName() {
+  return request({
+    url: '/api/competition-level/selectLevelName',
+    method: 'get',
+  })
+}
+
+// 获取获奖名次名称列表
+export function selectRankingName() {
+  return request({
+    url: '/api/competition-level/selectRankingName',
+    method: 'get',
+  })
+}

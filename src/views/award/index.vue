@@ -4,10 +4,36 @@
     <div class="search-wrapper">
       <el-form :inline="true" :model="queryParams" class="search-form">
         <el-form-item label="竞赛名称">
-          <el-input v-model="queryParams.competitionName" placeholder="请输入竞赛名称" clearable />
+          <el-select
+            v-model="queryParams.competitionName"
+            placeholder="请选择竞赛名称"
+            clearable
+            filterable
+            style="width: 240px"
+          >
+            <el-option
+              v-for="name in competitionNameList"
+              :key="name"
+              :label="name"
+              :value="name"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="竞赛等级">
-          <el-input v-model="queryParams.competitionLevel" placeholder="请输入获奖等级" clearable />
+          <el-select
+            v-model="queryParams.competitionLevel"
+            placeholder="请选择竞赛等级"
+            clearable
+            filterable
+            style="width: 240px"
+          >
+            <el-option
+              v-for="level in competitionLevelList"
+              :key="level"
+              :label="level"
+              :value="level"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">查询</el-button>
@@ -122,13 +148,52 @@
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="600px" destroy-on-close>
       <el-form ref="awardFormRef" :model="awardForm" :rules="rules" label-width="100px">
         <el-form-item label="竞赛名称" prop="competitionName">
-          <el-input v-model="awardForm.competitionName" placeholder="请输入竞赛名称" />
+          <el-select
+            v-model="awardForm.competitionName"
+            placeholder="请选择竞赛名称"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="name in competitionNameList"
+              :key="name"
+              :label="name"
+              :value="name"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="竞赛等级" prop="competitionLevel">
-          <el-input v-model="awardForm.competitionLevel" placeholder="请输入竞赛等级" />
+          <el-select
+            v-model="awardForm.competitionLevel"
+            placeholder="请选择竞赛等级"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="level in competitionLevelList"
+              :key="level"
+              :label="level"
+              :value="level"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="获奖等级" prop="competitionRanking">
-          <el-input v-model="awardForm.competitionRanking" placeholder="请输入获奖等级" />
+          <el-select
+            v-model="awardForm.competitionRanking"
+            placeholder="请选择获奖等级"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="ranking in rankingNameList"
+              :key="ranking"
+              :label="ranking"
+              :value="ranking"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="指导老师" prop="advisor">
           <el-input v-model="awardForm.advisor" placeholder="请输入指导老师" />
@@ -178,6 +243,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { selectAward, saveAward, deleteAward } from '@/api/award'
+import { selectCompetitionName } from '@/api/competition'
+import { selectLevelName, selectRankingName } from '@/api/level'
 import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
 
@@ -418,8 +485,56 @@ const handleAudit = async (id, action) => {
   }
 }
 
-// 初始化
+// 竞赛名称列表
+const competitionNameList = ref([])
+
+// 获取竞赛名称列表
+const getCompetitionNameList = async () => {
+  try {
+    const res = await selectCompetitionName()
+    if (res.code === 0) {
+      competitionNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取竞赛名称列表失败:', error)
+  }
+}
+
+// 竞赛级别列表
+const competitionLevelList = ref([])
+
+// 获取竞赛级别列表
+const getCompetitionLevelList = async () => {
+  try {
+    const res = await selectLevelName()
+    if (res.code === 0) {
+      competitionLevelList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取竞赛级别列表失败:', error)
+  }
+}
+
+// 获奖名次列表
+const rankingNameList = ref([])
+
+// 获取获奖名次列表
+const getRankingNameList = async () => {
+  try {
+    const res = await selectRankingName()
+    if (res.code === 0) {
+      rankingNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取获奖名次列表失败:', error)
+  }
+}
+
+// 初始化时获取竞赛名称、级别和获奖名次列表
 onMounted(() => {
+  getCompetitionNameList()
+  getCompetitionLevelList()
+  getRankingNameList()
   handleQuery()
 })
 </script>

@@ -48,3 +48,14 @@ export function deleteMajor(id) {
     },
   })
 }
+
+/**
+ * 获取专业名称列表
+ * @returns {Promise}
+ */
+export function selectMajorName() {
+  return request({
+    url: '/api/major/selectMajorName',
+    method: 'get',
+  })
+}

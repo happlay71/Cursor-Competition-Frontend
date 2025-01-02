@@ -4,12 +4,17 @@
     <div class="search-wrapper">
       <div class="search-form">
         <div class="search-inputs">
-          <el-input
-            v-model="searchForm.name"
-            placeholder="请输入专业名称"
-            clearable
-            style="width: 200px"
-          />
+          <el-form-item label="专业名称">
+            <el-select
+              v-model="searchForm.name"
+              placeholder="请选择专业名称"
+              clearable
+              filterable
+              style="width: 240px"
+            >
+              <el-option v-for="name in majorNameList" :key="name" :label="name" :value="name" />
+            </el-select>
+          </el-form-item>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
@@ -81,9 +86,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { selectMajor, saveMajor, deleteMajor } from '@/api/major'
+import { selectMajor, saveMajor, deleteMajor, selectMajorName } from '@/api/major'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
@@ -117,6 +122,21 @@ const rules = {
     { required: true, message: '请输入专业名称', trigger: 'blur' },
     { min: 2, max: 50, message: '长度在2-50个字符之间', trigger: 'blur' },
   ],
+}
+
+// 专业名称列表
+const majorNameList = ref([])
+
+// 获取专业名称列表
+const getMajorNameList = async () => {
+  try {
+    const res = await selectMajorName()
+    if (res.code === 0) {
+      majorNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取专业名称列表失败:', error)
+  }
 }
 
 // 获取专业列表
@@ -245,7 +265,10 @@ const handleAdd = () => {
 }
 
 // 初始化
-getMajorList()
+onMounted(() => {
+  getMajorNameList()
+  getMajorList()
+})
 </script>
 
 <style scoped>

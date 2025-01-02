@@ -2,27 +2,40 @@
   <div class="level-container">
     <!-- 搜索区域 -->
     <div class="search-wrapper">
-      <div class="search-form">
-        <div class="search-inputs">
-          <el-input
-            v-model="searchForm.competition"
-            placeholder="请输入竞赛名称"
+      <el-form :inline="true" :model="queryParams" class="search-form">
+        <el-form-item label="竞赛名称">
+          <el-select
+            v-model="queryParams.competition"
+            placeholder="请选择竞赛名称"
             clearable
-            style="width: 200px"
-          />
-          <el-input
-            v-model="searchForm.level"
-            placeholder="请输入竞赛等级"
+            filterable
+            style="width: 240px"
+          >
+            <el-option
+              v-for="name in competitionNameList"
+              :key="name"
+              :label="name"
+              :value="name"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="竞赛级别">
+          <el-select
+            v-model="queryParams.level"
+            placeholder="请选择竞赛级别"
             clearable
-            style="width: 200px"
-          />
-        </div>
-        <div class="search-buttons">
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button type="primary" @click="handleAdd" v-if="isAdmin">新增</el-button>
+            filterable
+            style="width: 240px"
+          >
+            <el-option v-for="level in levelNameList" :key="level" :label="level" :value="level" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleQuery">查询</el-button>
+          <el-button type="primary" @click="handleAdd">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
-        </div>
-      </div>
+        </el-form-item>
+      </el-form>
     </div>
 
     <!-- 表格区域 -->
@@ -59,22 +72,29 @@
     <!-- 编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'edit' ? '编辑竞赛级别信息' : '查看竞赛级别信息'"
+      :title="dialogType === 'add' ? '新增竞赛级别' : '编辑竞赛级别'"
       width="500px"
       destroy-on-close
     >
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-width="100px"
-        :disabled="dialogType === 'view'"
-      >
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
         <el-form-item label="竞赛名称" prop="competition">
-          <el-input v-model="form.competition" placeholder="请输入竞赛名称" />
+          <el-select
+            v-model="form.competition"
+            placeholder="请选择竞赛名称"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="name in competitionNameList"
+              :key="name"
+              :label="name"
+              :value="name"
+            />
+          </el-select>
         </el-form-item>
-        <el-form-item label="竞赛等级" prop="level">
-          <el-input v-model="form.level" placeholder="请输入竞赛等级" />
+        <el-form-item label="竞赛级别" prop="level">
+          <el-input v-model="form.level" placeholder="请输入竞赛级别" />
         </el-form-item>
         <el-form-item label="获奖名次" prop="ranking">
           <el-input v-model="form.ranking" placeholder="请输入获奖名次" />
@@ -94,9 +114,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" v-if="dialogType === 'edit'">
-            确认
-          </el-button>
+          <el-button type="primary" @click="handleSubmit">确认</el-button>
         </span>
       </template>
     </el-dialog>
@@ -104,18 +122,21 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { selectLevel, saveLevel, deleteLevel } from '@/api/level'
+import { selectLevel, saveLevel, deleteLevel, selectLevelName } from '@/api/level'
+import { selectCompetitionName } from '@/api/competition'
 import { useUserStore } from '@/stores/user'
 
 const userStore = useUserStore()
 const isAdmin = computed(() => userStore.isAdmin)
 
 // 搜索表单
-const searchForm = reactive({
+const queryParams = reactive({
   competition: '',
   level: '',
+  pageNo: 1,
+  pageSize: 10,
 })
 
 // 表格数据
@@ -153,6 +174,36 @@ const rules = {
   ],
 }
 
+// 竞赛名称列表
+const competitionNameList = ref([])
+
+// 获取竞赛名称列表
+const getCompetitionNameList = async () => {
+  try {
+    const res = await selectCompetitionName()
+    if (res.code === 0) {
+      competitionNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取竞赛名称列表失败:', error)
+  }
+}
+
+// 竞赛级别列表
+const levelNameList = ref([])
+
+// 获取竞赛级别列表
+const getLevelNameList = async () => {
+  try {
+    const res = await selectLevelName()
+    if (res.code === 0) {
+      levelNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取竞赛级别列表失败:', error)
+  }
+}
+
 // 获取列表
 const getLevelList = async () => {
   loading.value = true
@@ -160,8 +211,8 @@ const getLevelList = async () => {
     const params = {
       pageNo: currentPage.value,
       pageSize: pageSize.value,
-      competition: searchForm.competition,
-      level: searchForm.level,
+      competition: queryParams.competition,
+      level: queryParams.level,
     }
     const res = await selectLevel(params)
     if (res.code === 0 && res.data) {
@@ -181,17 +232,23 @@ const getLevelList = async () => {
 }
 
 // 搜索
-const handleSearch = () => {
+const handleQuery = () => {
   currentPage.value = 1
   getLevelList()
 }
 
 // 重置搜索
 const resetSearch = () => {
-  Object.keys(searchForm).forEach((key) => {
-    searchForm[key] = ''
+  Object.keys(queryParams).forEach((key) => {
+    if (key === 'pageNo') {
+      queryParams[key] = 1
+    } else if (key === 'pageSize') {
+      queryParams[key] = 10
+    } else {
+      queryParams[key] = ''
+    }
   })
-  handleSearch()
+  handleQuery()
 }
 
 // 分页
@@ -266,7 +323,7 @@ const handleSubmit = () => {
 
 // 新增
 const handleAdd = () => {
-  dialogType.value = 'edit'
+  dialogType.value = 'add'
   // 重置表单数据
   Object.keys(form).forEach((key) => {
     form[key] = key === 'achievement' ? 0 : ''
@@ -275,7 +332,11 @@ const handleAdd = () => {
 }
 
 // 初始化
-getLevelList()
+onMounted(() => {
+  getCompetitionNameList()
+  getLevelNameList()
+  handleQuery()
+})
 </script>
 
 <style scoped>

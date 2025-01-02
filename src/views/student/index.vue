@@ -16,12 +16,15 @@
             clearable
             style="width: 200px"
           />
-          <el-input
+          <el-select
             v-model="searchForm.profession"
-            placeholder="请输入专业"
+            placeholder="请选择专业"
             clearable
+            filterable
             style="width: 200px"
-          />
+          >
+            <el-option v-for="name in majorNameList" :key="name" :label="name" :value="name" />
+          </el-select>
           <el-select
             v-model="searchForm.certification"
             placeholder="认证状态"
@@ -105,10 +108,32 @@
     <!-- 编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'edit' ? '编辑学生信息' : '查看学生信息'"
+      :title="
+        dialogType === 'add'
+          ? '新增学生信息'
+          : dialogType === 'edit'
+            ? '编辑学生信息'
+            : '查看学生信息'
+      "
       width="500px"
       destroy-on-close
     >
+      <div class="dialog-header" v-if="dialogType === 'add'">
+        <el-upload
+          class="excel-upload"
+          accept=".xlsx, .xls"
+          :auto-upload="false"
+          :show-file-list="false"
+          :on-change="handleExcelUpload"
+        >
+          <el-button type="primary">
+            <el-icon><Upload /></el-icon>
+            通过Excel导入
+          </el-button>
+        </el-upload>
+        <el-link type="primary" :underline="false" @click="downloadTemplate">下载模板</el-link>
+      </div>
+      <el-divider v-if="dialogType !== 'edit'">或手动输入</el-divider>
       <el-form
         ref="formRef"
         :model="form"
@@ -126,7 +151,15 @@
           <el-input v-model="form.grade" placeholder="请输入年级" />
         </el-form-item>
         <el-form-item label="专业" prop="profession">
-          <el-input v-model="form.profession" placeholder="请输入专业" />
+          <el-select
+            v-model="form.profession"
+            placeholder="请选择专业"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option v-for="name in majorNameList" :key="name" :label="name" :value="name" />
+          </el-select>
         </el-form-item>
         <el-form-item label="性别" prop="gender">
           <el-radio-group v-model="form.gender">
@@ -144,7 +177,7 @@
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" v-if="dialogType === 'edit'">
+          <el-button type="primary" @click="handleSubmit" v-if="dialogType !== 'view'">
             确认
           </el-button>
         </span>
@@ -154,10 +187,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { selectStudent, saveStudent, toggleStudentStatus, deleteStudent } from '@/api/student'
+import { selectMajorName } from '@/api/major'
+import { Upload } from '@element-plus/icons-vue'
+import * as XLSX from 'xlsx'
 
 const router = useRouter()
 
@@ -339,7 +375,7 @@ const handleToggleStatus = (row) => {
 
 // 新增学生信息
 const handleAdd = () => {
-  dialogType.value = 'edit'
+  dialogType.value = 'add'
   // 重置表单数据
   Object.keys(form).forEach((key) => {
     form[key] = key === 'gender' ? 1 : ''
@@ -373,8 +409,97 @@ const handleDelete = (row) => {
     })
 }
 
+// Excel导入相关
+const handleExcelUpload = (file) => {
+  if (!file) return
+
+  // 文件类型验证
+  const isExcel = /\.(xlsx|xls)$/.test(file.name.toLowerCase())
+  if (!isExcel) {
+    ElMessage.error('只能上传 Excel 文件！')
+    return
+  }
+
+  // 文件大小验证（2MB）
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isLt2M) {
+    ElMessage.error('文件大小不能超过 2MB！')
+    return
+  }
+
+  // 读取文件
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const data = e.target.result
+      const workbook = XLSX.read(data, { type: 'array' })
+      const firstSheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[firstSheetName]
+      const excelData = XLSX.utils.sheet_to_json(worksheet)
+
+      // 验证数据格式
+      if (excelData.length === 0) {
+        ElMessage.error('Excel 文件中没有数据！')
+        return
+      }
+
+      // TODO: 调用后端接口处理数据
+      console.log('Excel数据:', excelData)
+      ElMessage.success('文件解析成功，即将添加到后端接口...')
+    } catch (error) {
+      console.error('Excel解析错误:', error)
+      ElMessage.error('Excel 文件解析失败！')
+    }
+  }
+  reader.readAsArrayBuffer(file.raw)
+}
+
+// 下载模板
+const downloadTemplate = () => {
+  // 创建工作簿
+  const wb = XLSX.utils.book_new()
+
+  // 创建表头数据
+  const header = ['学号', '姓名', '年级', '专业', '性别(男/女)', '邮箱', '电话']
+
+  // 创建示例数据
+  const exampleData = [
+    ['2021001', '张三', '2021', '计算机科学与技术', '男', 'zhangsan@example.com', '13800138000'],
+  ]
+
+  // 合并表头和数据
+  const wsData = [header, ...exampleData]
+
+  // 创建工作表
+  const ws = XLSX.utils.aoa_to_sheet(wsData)
+
+  // 将工作表添加到工作簿
+  XLSX.utils.book_append_sheet(wb, ws, '学生信息模板')
+
+  // 下载文件
+  XLSX.writeFile(wb, '学生信息导入模板.xlsx')
+}
+
+// 专业名称列表
+const majorNameList = ref([])
+
+// 获取专业名称列表
+const getMajorNameList = async () => {
+  try {
+    const res = await selectMajorName()
+    if (res.code === 0) {
+      majorNameList.value = res.data || []
+    }
+  } catch (error) {
+    console.error('获取专业名称列表失败:', error)
+  }
+}
+
 // 初始化
-getStudentList()
+onMounted(() => {
+  getMajorNameList()
+  getStudentList()
+})
 </script>
 
 <style scoped>
@@ -461,5 +586,21 @@ getStudentList()
 
 :deep(.el-table__fixed-right::before) {
   background-color: var(--el-table-border-color);
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+
+.excel-upload {
+  display: inline-block;
+}
+
+:deep(.el-divider--horizontal) {
+  margin: 20px 0;
 }
 </style>
