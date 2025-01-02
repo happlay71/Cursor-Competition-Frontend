@@ -10,27 +10,25 @@
           <span>获奖信息</span>
         </el-menu-item>
         <el-menu-item index="/team">
-          <el-icon><User /></el-icon>
-          <span>学生获奖团队</span>
+          <el-icon><UserFilled /></el-icon>
+          <span>团队信息</span>
         </el-menu-item>
-        <template v-if="isAdmin">
-          <el-menu-item index="/competition">
-            <el-icon><List /></el-icon>
-            <span>竞赛信息</span>
-          </el-menu-item>
-          <el-menu-item index="/competition-level">
-            <el-icon><Collection /></el-icon>
-            <span>竞赛级别信息</span>
-          </el-menu-item>
-          <el-menu-item index="/major">
-            <el-icon><School /></el-icon>
-            <span>专业信息</span>
-          </el-menu-item>
-          <el-menu-item index="/student">
-            <el-icon><Avatar /></el-icon>
-            <span>学生信息</span>
-          </el-menu-item>
-        </template>
+        <el-menu-item index="/competition">
+          <el-icon><Medal /></el-icon>
+          <span>竞赛信息</span>
+        </el-menu-item>
+        <el-menu-item index="/competition-level">
+          <el-icon><Collection /></el-icon>
+          <span>竞赛级别</span>
+        </el-menu-item>
+        <el-menu-item index="/major">
+          <el-icon><School /></el-icon>
+          <span>专业信息</span>
+        </el-menu-item>
+        <el-menu-item index="/student" v-if="isAdmin">
+          <el-icon><User /></el-icon>
+          <span>学生信息</span>
+        </el-menu-item>
         <el-menu-item index="/profile">
           <el-icon><UserFilled /></el-icon>
           <span>个人信息</span>

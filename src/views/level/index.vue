@@ -19,7 +19,7 @@
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button type="primary" @click="handleAdd">新增</el-button>
+          <el-button type="primary" @click="handleAdd" v-if="isAdmin">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>
       </div>
@@ -33,7 +33,7 @@
       <el-table-column prop="ranking" label="获奖名次" width="120" />
       <el-table-column prop="credit" label="认定学分" width="120" />
       <el-table-column prop="achievement" label="折算成绩" width="120" />
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="150" fixed="right" v-if="isAdmin">
         <template #default="{ row }">
           <div class="operation-buttons">
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
@@ -104,9 +104,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { selectLevel, saveLevel, deleteLevel } from '@/api/level'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+const isAdmin = computed(() => userStore.isAdmin)
 
 // 搜索表单
 const searchForm = reactive({

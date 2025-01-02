@@ -44,19 +44,16 @@ const router = createRouter({
           path: 'competition',
           name: 'competition',
           component: () => import('@/views/competition/index.vue'),
-          meta: { requiresAdmin: true },
         },
         {
           path: 'competition-level',
           name: 'competition-level',
           component: () => import('@/views/level/index.vue'),
-          meta: { requiresAdmin: true },
         },
         {
           path: 'major',
           name: 'major',
           component: () => import('@/views/major/index.vue'),
-          meta: { requiresAdmin: true },
         },
         {
           path: 'student',

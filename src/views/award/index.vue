@@ -24,12 +24,7 @@
       <el-table-column prop="competitionName" label="竞赛名称" min-width="150" />
       <el-table-column prop="competitionLevel" label="竞赛等级" width="120" />
       <el-table-column prop="competitionRanking" label="获奖名次" width="120" />
-      <el-table-column prop="studentName" label="学生姓名" width="120" />
-      <el-table-column prop="team" label="团队ID" width="100">
-        <template #default="scope">
-          {{ scope.row.team || '-' }}
-        </template>
-      </el-table-column>
+      <el-table-column prop="studentName" label="第一学生姓名" width="120" />
       <el-table-column prop="advisor" label="指导老师" width="120" />
       <el-table-column prop="awardYear" label="获奖年份" width="100" />
       <el-table-column prop="awardDate" label="获奖日期" width="180">
@@ -54,37 +49,47 @@
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="scope">
           <div class="operation-buttons">
-            <el-button
-              v-if="scope.row.status === 0"
-              type="primary"
-              size="small"
-              @click="handleEdit(scope.row)"
-            >
-              修改
-            </el-button>
-            <el-button
-              v-if="scope.row.status === 0"
-              type="danger"
-              size="small"
-              @click="handleDelete(scope.row.id)"
-            >
-              删除
-            </el-button>
+            <template v-if="scope.row.status !== 1">
+              <el-button type="primary" size="small" @click="handleEdit(scope.row)">
+                修改
+              </el-button>
+              <el-button type="danger" size="small" @click="handleDelete(scope.row.id)">
+                删除
+              </el-button>
+            </template>
           </div>
           <div class="operation-buttons">
-            <el-dropdown
-              v-if="isAdmin && scope.row.status === 0"
-              @command="(command) => handleAudit(scope.row.id, command)"
-              class="audit-dropdown"
-            >
-              <el-button type="warning" size="small"> 审核 </el-button>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="approve">通过</el-dropdown-item>
-                  <el-dropdown-item command="reject">驳回</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+            <template v-if="isAdmin">
+              <el-dropdown
+                v-if="scope.row.status === 0"
+                @command="(command) => handleAudit(scope.row.id, command)"
+                class="audit-dropdown"
+              >
+                <el-button type="warning" size="small">审核</el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item command="approve">通过</el-dropdown-item>
+                    <el-dropdown-item command="reject">驳回</el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <el-button
+                v-else-if="scope.row.status === 1"
+                type="warning"
+                size="small"
+                @click="handleAudit(scope.row.id, 'reject')"
+              >
+                重新审核
+              </el-button>
+              <el-button
+                v-else-if="scope.row.status === 2"
+                type="warning"
+                size="small"
+                @click="handleAudit(scope.row.id, 'approve')"
+              >
+                通过
+              </el-button>
+            </template>
           </div>
         </template>
       </el-table-column>
@@ -144,7 +149,10 @@
           />
         </el-form-item>
         <el-form-item label="学生学号" prop="firstPlaceStudentId">
-          <el-input v-model.number="awardForm.firstPlaceStudentId" placeholder="请输入学生学号" />
+          <el-input
+            v-model.number="awardForm.firstPlaceStudentId"
+            placeholder="请输入第一学生学号"
+          />
         </el-form-item>
         <el-form-item label="填表日期" prop="entryDate">
           <el-date-picker
@@ -216,7 +224,7 @@ const rules = {
   awardYear: [{ required: true, message: '请选择获奖年份', trigger: 'change' }],
   awardDate: [{ required: true, message: '请选择获奖日期', trigger: 'change' }],
   firstPlaceStudentId: [
-    { required: true, message: '请输入学生学号', trigger: 'blur' },
+    { required: true, message: '请输入第一学生学号', trigger: 'blur' },
     { type: 'number', message: '学号必须为数字', trigger: 'blur' },
   ],
   entryDate: [{ required: true, message: '请选择填表日期', trigger: 'change' }],

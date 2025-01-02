@@ -13,7 +13,7 @@
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button type="primary" @click="handleAdd">新增</el-button>
+          <el-button type="primary" @click="handleAdd" v-if="isAdmin">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>
       </div>
@@ -24,7 +24,7 @@
       <el-table-column type="index" label="序号" width="80" align="center" />
       <el-table-column prop="name" label="专业名称" min-width="200" align="center" />
       <el-table-column prop="awardCount" label="获奖人数" width="120" align="center" />
-      <el-table-column label="操作" width="180" align="center" fixed="right">
+      <el-table-column label="操作" width="180" align="center" fixed="right" v-if="isAdmin">
         <template #default="{ row }">
           <div class="operation-buttons">
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
@@ -81,9 +81,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { selectMajor, saveMajor, deleteMajor } from '@/api/major'
+import { useUserStore } from '@/stores/user'
+
+const userStore = useUserStore()
+const isAdmin = computed(() => userStore.isAdmin)
 
 // 搜索表单
 const searchForm = reactive({

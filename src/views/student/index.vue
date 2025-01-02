@@ -224,12 +224,10 @@ const getStudentList = async () => {
     const params = {
       pageSize: pageSize.value,
       pageNo: currentPage.value,
-      queryParams: {
-        studentId: searchForm.studentId,
-        studentName: searchForm.studentName,
-        profession: searchForm.profession,
-        certification: searchForm.certification,
-      },
+      studentId: searchForm.studentId,
+      studentName: searchForm.studentName,
+      profession: searchForm.profession,
+      certification: searchForm.certification,
     }
     const res = await selectStudent(params)
     if (res.code === 0 && res.data) {

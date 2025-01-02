@@ -80,8 +80,8 @@
         label-width="100px"
         :disabled="dialogType === 'view'"
       >
-        <el-form-item label="学生姓名" prop="studentName">
-          <el-input v-model="form.studentName" placeholder="请输入学生姓名" />
+        <el-form-item label="学生学号" prop="studentId">
+          <el-input v-model="form.studentId" placeholder="请输入学生学号" />
         </el-form-item>
         <el-form-item label="获奖编号" prop="awardId">
           <el-input-number v-model="form.awardId" :min="1" placeholder="请输入获奖编号" />
@@ -126,16 +126,16 @@ const dialogType = ref('edit')
 const formRef = ref(null)
 const form = reactive({
   id: '',
-  studentName: '',
+  studentId: '',
   awardId: '',
   rankingInTeam: 1,
 })
 
 // 表单验证规则
 const rules = {
-  studentName: [
-    { required: true, message: '请输入学生姓名', trigger: 'blur' },
-    { min: 2, max: 20, message: '长度在2-20个字符之间', trigger: 'blur' },
+  studentId: [
+    { required: true, message: '请输入学生学号', trigger: 'blur' },
+    { pattern: /^\d+$/, message: '学号必须为数字', trigger: 'blur' },
   ],
   awardId: [{ required: true, message: '请输入获奖编号', trigger: 'blur' }],
   rankingInTeam: [
@@ -151,10 +151,8 @@ const getTeamList = async () => {
     const params = {
       pageNo: currentPage.value,
       pageSize: pageSize.value,
-      queryParams: {
-        studentName: searchForm.studentName,
-        awardId: searchForm.awardId,
-      },
+      studentName: searchForm.studentName,
+      awardId: searchForm.awardId,
     }
     const res = await selectTeam(params)
     if (res.code === 0 && res.data) {
