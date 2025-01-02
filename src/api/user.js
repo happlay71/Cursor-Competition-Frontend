@@ -21,8 +21,9 @@ export function saveUser(data) {
 // 删除用户
 export function deleteUser(id) {
   return request({
-    url: `/api/user/deleteUser/${id}`,
+    url: '/api/user/deleteUser',
     method: 'get',
+    params: { id },
   })
 }
 

@@ -71,7 +71,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
+      <el-table-column label="操作" width="200" fixed="right" align="center">
         <template #default="{ row }">
           <div class="operation-buttons">
             <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
@@ -84,6 +84,7 @@
               {{ row.status === 0 ? '禁用' : '启用' }}
             </el-button>
             <el-button v-else size="small" type="info" disabled> 未认证 </el-button>
+            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </div>
         </template>
       </el-table-column>
@@ -156,7 +157,7 @@
 import { ref, reactive } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { selectStudent, saveStudent, toggleStudentStatus } from '@/api/student'
+import { selectStudent, saveStudent, toggleStudentStatus, deleteStudent } from '@/api/student'
 
 const router = useRouter()
 
@@ -340,6 +341,32 @@ const handleAdd = () => {
     form[key] = key === 'gender' ? 1 : ''
   })
   dialogVisible.value = true
+}
+
+// 删除学生
+const handleDelete = (row) => {
+  ElMessageBox.confirm('确认删除该学生吗？删除后无法恢复，且只能删除没有获奖信息的学生。', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(async () => {
+      try {
+        const res = await deleteStudent(row.id)
+        if (res.code === 0) {
+          ElMessage.success('删除成功')
+          getStudentList()
+        } else {
+          ElMessage.error(res.message || '删除失败')
+        }
+      } catch (error) {
+        console.error('删除失败:', error)
+        ElMessage.error('删除失败')
+      }
+    })
+    .catch(() => {
+      ElMessage.info('已取消删除')
+    })
 }
 
 // 初始化

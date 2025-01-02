@@ -85,29 +85,26 @@ router.beforeEach((to, from, next) => {
     userStore.restoreUserInfo()
   }
 
-  const isLoggedIn = userStore.isLoggedIn
-  const isAdmin = userStore.isAdmin
-
-  // 如果用户已登录且要去登录页
-  if (userStore.isLoggedIn && to.path === '/login') {
+  // 如果用户已登录且要去登录页或注册页
+  if (userStore.isLoggedIn && (to.path === '/login' || to.path === '/register')) {
     next('/award') // 重定向到获奖信息页面
     return
   }
 
-  // 如果用户未登录且要去的不是登录页
-  if (!userStore.isLoggedIn && to.path !== '/login') {
-    next('/login')
+  // 如果是前往登录页或注册页，直接放行
+  if (to.path === '/login' || to.path === '/register') {
+    next()
     return
   }
 
-  // 需要登录的页面
-  if (to.meta.requiresAuth && !isLoggedIn) {
+  // 如果用户未登录且要去的不是登录页或注册页
+  if (!userStore.isLoggedIn) {
     next('/login')
     return
   }
 
   // 需要管理员权限的页面
-  if (to.meta.requiresAdmin && !isAdmin) {
+  if (to.meta.requiresAdmin && !userStore.isAdmin) {
     next('/award')
     return
   }

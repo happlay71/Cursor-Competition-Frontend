@@ -46,3 +46,12 @@ export function toggleStudentStatus(id, status) {
     },
   })
 }
+
+// 删除学生
+export function deleteStudent(id) {
+  return request({
+    url: '/api/student/deleteStudent',
+    method: 'get',
+    params: { id },
+  })
+}

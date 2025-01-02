@@ -47,8 +47,8 @@
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100" align="center">
         <template #default="{ row }">
-          <el-tag :type="row.status === 0 ? 'success' : 'danger'">
-            {{ row.status === 0 ? '正常' : '禁用' }}
+          <el-tag :type="row.isDelete === 1 ? 'danger' : row.status === 0 ? 'success' : 'warning'">
+            {{ row.isDelete === 1 ? '已删除' : row.status === 0 ? '正常' : '禁用' }}
           </el-tag>
         </template>
       </el-table-column>
@@ -65,18 +65,35 @@
       <el-table-column label="操作" width="280" fixed="right" align="center">
         <template #default="{ row }">
           <div class="operation-buttons">
-            <el-button size="small" type="warning" @click="handleEdit(row)">编辑</el-button>
+            <el-button
+              size="small"
+              type="warning"
+              @click="handleEdit(row)"
+              :disabled="row.isDelete === 1"
+              >编辑</el-button
+            >
             <el-button
               size="small"
               :type="row.status === 0 ? 'danger' : 'success'"
               @click="handleToggleStatus(row)"
+              :disabled="row.isDelete === 1"
             >
               {{ row.status === 0 ? '禁用' : '启用' }}
             </el-button>
-            <el-button size="small" type="primary" @click="handleChangePassword(row)"
+            <el-button
+              size="small"
+              type="primary"
+              @click="handleChangePassword(row)"
+              :disabled="row.isDelete === 1"
               >修改密码</el-button
             >
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button
+              size="small"
+              type="danger"
+              @click="handleDelete(row)"
+              :disabled="row.isDelete === 1"
+              >删除</el-button
+            >
           </div>
         </template>
       </el-table-column>

@@ -6,12 +6,13 @@
         <el-form-item label="竞赛名称">
           <el-input v-model="queryParams.competitionName" placeholder="请输入竞赛名称" clearable />
         </el-form-item>
-        <el-form-item label="获奖等级">
+        <el-form-item label="竞赛等级">
           <el-input v-model="queryParams.competitionLevel" placeholder="请输入获奖等级" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">查询</el-button>
           <el-button type="primary" @click="handleAdd">新增</el-button>
+          <el-button @click="resetSearch">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -259,6 +260,19 @@ const STATUS_CONFIG = {
   },
 }
 
+// 重置搜索
+const resetSearch = () => {
+  // 重置查询参数
+  Object.assign(queryParams, {
+    competitionName: '',
+    competitionLevel: '',
+    pageNo: 1,
+    pageSize: 10,
+  })
+  // 重新查询
+  handleQuery()
+}
+
 // 查询方法
 const handleQuery = async () => {
   try {
@@ -312,7 +326,7 @@ const handleDelete = async (id) => {
     await ElMessageBox.confirm('确认删除该记录吗？', '提示', {
       type: 'warning',
     })
-    const res = await deleteAward({ awardId: id })
+    const res = await deleteAward(id)
     if (res.code === 0) {
       ElMessage.success('删除成功')
       handleQuery()
@@ -332,10 +346,11 @@ const handleSave = () => {
   awardFormRef.value?.validate(async (valid) => {
     if (valid) {
       try {
-        // 转换年份为数字
+        // 转换年份为数字并添加申请人ID
         const submitData = {
           ...awardForm,
           awardYear: parseInt(awardForm.awardYear),
+          applicant: userStore.userInfo.id,
         }
 
         const res = await saveAward(submitData)
