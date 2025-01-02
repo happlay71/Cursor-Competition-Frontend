@@ -55,3 +55,17 @@ export function deleteStudent(id) {
     params: { id },
   })
 }
+
+// 导入学生信息（Excel）
+export function importStudentExcel(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return request({
+    url: '/api/student/importExcel',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+}

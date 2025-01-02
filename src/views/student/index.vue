@@ -190,7 +190,13 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
-import { selectStudent, saveStudent, toggleStudentStatus, deleteStudent } from '@/api/student'
+import {
+  selectStudent,
+  saveStudent,
+  toggleStudentStatus,
+  deleteStudent,
+  importStudentExcel,
+} from '@/api/student'
 import { selectMajorName } from '@/api/major'
 import { Upload } from '@element-plus/icons-vue'
 import * as XLSX from 'xlsx'
@@ -410,48 +416,30 @@ const handleDelete = (row) => {
 }
 
 // Excel导入相关
-const handleExcelUpload = (file) => {
-  if (!file) return
-
+const handleExcelUpload = async (file) => {
   // 文件类型验证
-  const isExcel = /\.(xlsx|xls)$/.test(file.name.toLowerCase())
-  if (!isExcel) {
-    ElMessage.error('只能上传 Excel 文件！')
+  if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    ElMessage.error('只能上传 Excel 文件')
+    return
+  }
+  // 文件大小验证（例如限制5MB）
+  if (file.size / 1024 / 1024 > 5) {
+    ElMessage.error('文件大小不能超过 5MB')
     return
   }
 
-  // 文件大小验证（2MB）
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    ElMessage.error('文件大小不能超过 2MB！')
-    return
-  }
-
-  // 读取文件
-  const reader = new FileReader()
-  reader.onload = (e) => {
-    try {
-      const data = e.target.result
-      const workbook = XLSX.read(data, { type: 'array' })
-      const firstSheetName = workbook.SheetNames[0]
-      const worksheet = workbook.Sheets[firstSheetName]
-      const excelData = XLSX.utils.sheet_to_json(worksheet)
-
-      // 验证数据格式
-      if (excelData.length === 0) {
-        ElMessage.error('Excel 文件中没有数据！')
-        return
-      }
-
-      // TODO: 调用后端接口处理数据
-      console.log('Excel数据:', excelData)
-      ElMessage.success('文件解析成功，即将添加到后端接口...')
-    } catch (error) {
-      console.error('Excel解析错误:', error)
-      ElMessage.error('Excel 文件解析失败！')
+  try {
+    const res = await importStudentExcel(file.raw)
+    if (res.code === 0) {
+      ElMessage.success('导入成功')
+      // 刷新列表
+      handleQuery()
+    } else {
+      ElMessage.error(res.message || '导入失败')
     }
+  } catch (error) {
+    console.error('导入失败:', error)
   }
-  reader.readAsArrayBuffer(file.raw)
 }
 
 // 下载模板
