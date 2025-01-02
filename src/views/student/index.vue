@@ -208,6 +208,10 @@ const rules = {
     { required: true, message: '请输入姓名', trigger: 'blur' },
     { min: 2, max: 20, message: '姓名长度在2-20个字符之间', trigger: 'blur' },
   ],
+  profession: [
+    { required: true, message: '请输入专业', trigger: 'blur' },
+    { min: 2, max: 50, message: '专业名称长度在2-50个字符之间', trigger: 'blur' },
+  ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
