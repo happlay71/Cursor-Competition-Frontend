@@ -36,6 +36,80 @@
         <el-button type="primary" @click="handleEditInfo">修改信息</el-button>
         <el-button type="warning" @click="handleEditPassword">修改密码</el-button>
       </div>
+
+      <!-- 修改信息对话框 -->
+      <el-dialog
+        v-model="editInfoDialogVisible"
+        title="编辑用户信息"
+        width="500px"
+        destroy-on-close
+      >
+        <el-form
+          ref="editInfoFormRef"
+          :model="editInfoForm"
+          :rules="editInfoRules"
+          label-width="80px"
+        >
+          <el-form-item label="账号" prop="userAccount">
+            <el-input v-model="editInfoForm.userAccount" placeholder="请输入用户账号" />
+          </el-form-item>
+          <el-form-item label="昵称" prop="username">
+            <el-input v-model="editInfoForm.username" placeholder="请输入用户昵称" />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="editInfoDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitEditInfo">确认</el-button>
+          </span>
+        </template>
+      </el-dialog>
+
+      <!-- 修改密码对话框 -->
+      <el-dialog
+        v-model="editPasswordDialogVisible"
+        title="修改密码"
+        width="500px"
+        destroy-on-close
+      >
+        <el-form
+          ref="editPasswordFormRef"
+          :model="editPasswordForm"
+          :rules="editPasswordRules"
+          label-width="100px"
+        >
+          <el-form-item label="原密码" prop="oldPassword">
+            <el-input
+              v-model="editPasswordForm.oldPassword"
+              type="password"
+              placeholder="请输入原密码"
+              show-password
+            />
+          </el-form-item>
+          <el-form-item label="新密码" prop="newPassword">
+            <el-input
+              v-model="editPasswordForm.newPassword"
+              type="password"
+              placeholder="请输入新密码"
+              show-password
+            />
+          </el-form-item>
+          <el-form-item label="确认新密码" prop="confirmPassword">
+            <el-input
+              v-model="editPasswordForm.confirmPassword"
+              type="password"
+              placeholder="请再次输入新密码"
+              show-password
+            />
+          </el-form-item>
+        </el-form>
+        <template #footer>
+          <span class="dialog-footer">
+            <el-button @click="editPasswordDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitEditPassword">确认</el-button>
+          </span>
+        </template>
+      </el-dialog>
     </el-card>
 
     <!-- 右侧卡片：学生信息 -->
@@ -166,70 +240,6 @@
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
           <el-button type="primary" @click="submitVerify">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 修改信息对话框 -->
-    <el-dialog v-model="editInfoDialogVisible" title="编辑用户信息" width="500px" destroy-on-close>
-      <el-form
-        ref="editInfoFormRef"
-        :model="editInfoForm"
-        :rules="editInfoRules"
-        label-width="80px"
-      >
-        <el-form-item label="账号" prop="userAccount">
-          <el-input v-model="editInfoForm.userAccount" placeholder="请输入用户账号" />
-        </el-form-item>
-        <el-form-item label="昵称" prop="username">
-          <el-input v-model="editInfoForm.username" placeholder="请输入用户昵称" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="editInfoDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitEditInfo">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
-
-    <!-- 修改密码对话框 -->
-    <el-dialog v-model="editPasswordDialogVisible" title="修改密码" width="500px" destroy-on-close>
-      <el-form
-        ref="editPasswordFormRef"
-        :model="editPasswordForm"
-        :rules="editPasswordRules"
-        label-width="100px"
-      >
-        <el-form-item label="原密码" prop="oldPassword">
-          <el-input
-            v-model="editPasswordForm.oldPassword"
-            type="password"
-            placeholder="请输入原密码"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="新密码" prop="newPassword">
-          <el-input
-            v-model="editPasswordForm.newPassword"
-            type="password"
-            placeholder="请输入新密码"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="确认新密码" prop="confirmPassword">
-          <el-input
-            v-model="editPasswordForm.confirmPassword"
-            type="password"
-            placeholder="请再次输入新密码"
-            show-password
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="editPasswordDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitEditPassword">确认</el-button>
         </span>
       </template>
     </el-dialog>
@@ -615,7 +625,25 @@ const submitEditStudent = () => {
 }
 
 .left-card {
-  align-items: center;
+  position: relative;
+  overflow: visible;
+}
+
+.left-card :deep(.el-dialog) {
+  position: absolute !important;
+  margin: 0 !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+.left-card :deep(.el-overlay) {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .right-card {
@@ -660,9 +688,9 @@ const submitEditStudent = () => {
 }
 
 .info-item .label {
-  width: 50px;
+  width: 75px;
   color: #606266;
-  margin-left: 60px;
+  margin-left: 50px;
 }
 
 .info-item .value {
@@ -759,5 +787,37 @@ const submitEditStudent = () => {
 
 .button-group .el-button {
   width: 120px;
+}
+
+.left-card-dialog {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+.left-card-dialog :deep(.el-dialog) {
+  margin: 0 !important;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.left-card {
+  position: relative;
+  overflow: visible;
+}
+
+.left-card :deep(.el-dialog) {
+  position: absolute !important;
+  margin: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.left-card :deep(.el-overlay) {
+  position: absolute;
 }
 </style>
