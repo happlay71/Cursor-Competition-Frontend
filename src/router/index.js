@@ -5,6 +5,10 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/',
+      redirect: '/login',
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/login/index.vue'),
@@ -61,6 +65,12 @@ const router = createRouter({
           component: () => import('@/views/student/index.vue'),
           meta: { requiresAdmin: true },
         },
+        {
+          path: 'user',
+          name: 'user',
+          component: () => import('@/views/user/index.vue'),
+          meta: { requiresAdmin: true },
+        },
       ],
     },
   ],
@@ -78,9 +88,15 @@ router.beforeEach((to, from, next) => {
   const isLoggedIn = userStore.isLoggedIn
   const isAdmin = userStore.isAdmin
 
-  // 已登录用户访问登录/注册页面，直接跳转到获奖信息页面
-  if (isLoggedIn && ['/login', '/register'].includes(to.path)) {
-    next('/award')
+  // 如果用户已登录且要去登录页
+  if (userStore.isLoggedIn && to.path === '/login') {
+    next('/award') // 重定向到获奖信息页面
+    return
+  }
+
+  // 如果用户未登录且要去的不是登录页
+  if (!userStore.isLoggedIn && to.path !== '/login') {
+    next('/login')
     return
   }
 

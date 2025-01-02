@@ -29,6 +29,10 @@
           <el-icon><User /></el-icon>
           <span>学生信息</span>
         </el-menu-item>
+        <el-menu-item index="/user" v-if="isAdmin">
+          <el-icon><UserFilled /></el-icon>
+          <span>用户信息</span>
+        </el-menu-item>
         <el-menu-item index="/profile">
           <el-icon><UserFilled /></el-icon>
           <span>个人信息</span>
@@ -71,7 +75,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Trophy, UserFilled, User, List, Collection, School, Avatar } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -86,12 +90,29 @@ const userAvatar = computed(() => userStore.userInfo?.avatarUrl)
 
 const handleCommand = (command) => {
   if (command === 'logout') {
-    userStore.clearUserInfo()
+    userStore.logout()
     ElMessage.success('退出成功')
     router.push('/login')
   } else if (command === 'profile') {
     router.push('/profile')
   }
+}
+
+// 退出登录
+const handleLogout = () => {
+  ElMessageBox.confirm('确认退出登录吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning',
+  })
+    .then(() => {
+      userStore.logout()
+      router.push('/login')
+      ElMessage.success('退出登录成功')
+    })
+    .catch(() => {
+      ElMessage.info('已取消退出')
+    })
 }
 </script>
 

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import router from '@/router'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref('')
@@ -40,12 +41,13 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // 清除用户信息
-  const clearUserInfo = () => {
+  // 清除用户信息并退出登录
+  const logout = () => {
     token.value = ''
     userInfo.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
+    router.push('/login')
   }
 
   // 计算属性
@@ -62,7 +64,7 @@ export const useUserStore = defineStore('user', () => {
     token,
     userInfo,
     setUserInfo,
-    clearUserInfo,
+    logout,
     restoreUserInfo,
     isAdmin,
     isLoggedIn,
