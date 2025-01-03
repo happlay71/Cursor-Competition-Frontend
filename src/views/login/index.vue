@@ -70,6 +70,8 @@ const handleLogin = async () => {
   try {
     const res = await login(formData)
     if (res.code === 0 && res.data) {
+      // 只存储 token，不再手动设置过期时间
+      localStorage.setItem('token', res.data.token)
       // 修改这里，保存完整的用户信息
       await userStore.setUserInfo({
         id: res.data.id,

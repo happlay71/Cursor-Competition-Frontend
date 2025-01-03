@@ -27,6 +27,14 @@ service.interceptors.response.use(
   (response) => {
     const res = response.data
     if (res.code !== 0) {
+      // 如果是 token 过期的错误
+      if (res.code === 40100 || res.message?.includes('Token过期')) {
+        // 清除过期的 token
+        localStorage.removeItem('token')
+        // 跳转到登录页
+        window.location.href = '/login'
+        return Promise.reject(new Error('Token已过期，请重新登录'))
+      }
       ElMessage.error(res.message || '请求失败')
       return Promise.reject(new Error(res.message || '请求失败'))
     }
@@ -34,6 +42,12 @@ service.interceptors.response.use(
   },
   (error) => {
     console.error('响应错误:', error)
+    // 如果是 token 相关的错误
+    if (error.response?.status === 401 || error.message?.includes('Token')) {
+      localStorage.removeItem('token')
+      window.location.href = '/login'
+      return Promise.reject(new Error('Token已过期，请重新登录'))
+    }
     ElMessage.error(error.message || '请求失败')
     return Promise.reject(error)
   },
