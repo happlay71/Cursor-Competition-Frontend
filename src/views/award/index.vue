@@ -247,6 +247,7 @@ import { selectCompetitionName } from '@/api/competition'
 import { selectLevelName, selectRankingName } from '@/api/level'
 import { useUserStore } from '@/stores/user'
 import dayjs from 'dayjs'
+import router from '@/router'
 
 const userStore = useUserStore()
 const isAdmin = computed(() => userStore.isAdmin)
@@ -494,6 +495,12 @@ const getCompetitionNameList = async () => {
     const res = await selectCompetitionName()
     if (res.code === 0) {
       competitionNameList.value = res.data || []
+    } else if (res.code === 40101) {
+      ElMessage.error('用户已被禁用或删除，请联系管理员')
+      router.push('/login')
+    } else if (res.code === 40100) {
+      ElMessage.error('未登录')
+      await router.push('/login')
     }
   } catch (error) {
     console.error('获取竞赛名称列表失败:', error)
