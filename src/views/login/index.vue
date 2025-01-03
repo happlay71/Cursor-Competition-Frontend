@@ -45,6 +45,9 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const loading = ref(false)
 
+// 使用 ref 引用 el-form
+const loginForm = ref(null)
+
 const formData = reactive({
   userAccount: '',
   password: '',
@@ -65,14 +68,20 @@ const balls = [
 
 const userStore = useUserStore()
 
+// 登录方法
 const handleLogin = async () => {
   loading.value = true
   try {
+    // 使用 refs 访问 form 验证
+    await loginForm.value.validate()
+
+    // 调用登录接口
     const res = await login(formData)
     if (res.code === 0 && res.data) {
-      // 只存储 token，不再手动设置过期时间
+      // 登录成功后存储 token
       localStorage.setItem('token', res.data.token)
-      // 修改这里，保存完整的用户信息
+
+      // 保存完整的用户信息到用户 store
       await userStore.setUserInfo({
         id: res.data.id,
         userAccount: res.data.userAccount,
@@ -82,16 +91,23 @@ const handleLogin = async () => {
         isDelete: res.data.isDelete,
         token: res.data.token,
       })
+
+      // 登录成功后的提示
       ElMessage.success('登录成功')
+
+      // 跳转到奖项页面
       await router.push('/award')
     } else {
+      // 如果登录失败，展示错误信息
       ElMessage.error(res.message || '登录失败')
     }
   } catch (error) {
     console.error('登录错误:', error)
     ElMessage.error('登录失败')
+  } finally {
+    // 无论成功或失败，都将 loading 状态设置为 false
+    loading.value = false
   }
-  loading.value = false
 }
 </script>
 
