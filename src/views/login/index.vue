@@ -85,18 +85,22 @@ const handleLogin = async () => {
     // 调用登录接口
     const res = await login(formData)
     if (res.code === 0 && res.data) {
-      // 登录成功后存储 token
-      userStore.setUserInfo({ token: res.data.token })
-
-      // 保存完整的用户信息到用户 store
-      userStore.setUserInfo({
+      const userInfo = {
         id: res.data.id,
         userAccount: res.data.userAccount,
         username: res.data.username,
         avatarUrl: res.data.avatarUrl,
         status: res.data.status,
         isDelete: res.data.isDelete,
-      })
+        token: res.data.token,
+      }
+
+      // 登录成功后将信息存储到 localStorage
+      localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      localStorage.setItem('token', res.data.token)
+
+      // 保存用户信息到 userStore
+      userStore.setUserInfo(userInfo)
 
       // 登录成功后的提示
       ElMessage.success('登录成功')
@@ -115,6 +119,11 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+// 页面加载时恢复用户信息
+onMounted(() => {
+  userStore.restoreUserInfo() // 恢复用户信息
+})
 
 // 主题切换相关
 const isDark = ref(false)

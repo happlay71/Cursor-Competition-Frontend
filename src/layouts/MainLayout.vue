@@ -43,11 +43,11 @@
     <el-container class="right-container">
       <!-- 顶部栏 -->
       <div class="header">
-        <div class="header-left">
+        <!-- <div class="header-left">
           <el-icon class="collapse-icon" @click="toggleCollapse">
             <component :is="isCollapse ? 'Expand' : 'Fold'" />
           </el-icon>
-        </div>
+        </div> -->
         <div class="header-right">
           <!-- 主题切换按钮 -->
           <!-- <el-button
