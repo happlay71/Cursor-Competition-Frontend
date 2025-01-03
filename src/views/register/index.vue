@@ -1,5 +1,5 @@
 <template>
-  <div class="register-container">
+  <div class="register-container" :class="{ dark: isDark }">
     <div class="gradient-bg"></div>
     <div class="background">
       <!-- 静态小球 -->
@@ -18,6 +18,13 @@
       ></div>
     </div>
     <div class="register-box">
+      <!-- 主题切换按钮 -->
+      <el-button
+        class="theme-switch"
+        :icon="isDark ? 'Sunny' : 'Moon'"
+        circle
+        @click="toggleTheme"
+      />
       <el-form ref="registerForm" :model="formData" :rules="registerRules" class="register-form">
         <h3 class="title">注册账号</h3>
         <el-form-item prop="userAccount">
@@ -83,6 +90,25 @@ const handleRegister = async () => {
   }
   loading.value = false
 }
+
+// 主题切换相关
+const isDark = ref(false)
+
+// 切换主题
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  document.documentElement.className = isDark.value ? 'dark' : ''
+}
+
+// 初始化主题
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'dark') {
+    isDark.value = true
+    document.documentElement.className = 'dark'
+  }
+})
 </script>
 
 <style scoped>
@@ -235,5 +261,51 @@ const handleRegister = async () => {
     font-size: 28px;
     margin-bottom: 40px;
   }
+}
+
+/* 暗色主题背景 */
+.dark .gradient-bg {
+  background: linear-gradient(
+    45deg,
+    rgba(48, 56, 65, 1) 0%,
+    rgba(64, 158, 255, 0.2) 25%,
+    rgba(48, 56, 65, 1) 50%,
+    rgba(64, 158, 255, 0.2) 75%,
+    rgba(48, 56, 65, 1) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientBg 15s ease infinite;
+}
+
+/* 主题切换按钮样式 */
+.theme-switch {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.dark .theme-switch {
+  background: rgba(35, 39, 47, 0.95);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark .theme-switch:hover {
+  background: var(--hover-color);
+  border-color: #409eff;
+  color: #409eff;
+}
+
+/* 暗色主题变量 */
+.dark {
+  --bg-primary: #1e2227;
+  --bg-secondary: #23272f;
+  --text-primary: #e5eaf3;
+  --text-secondary: #a9b2c8;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hover-color: rgba(255, 255, 255, 0.05);
+  --active-color: rgba(64, 158, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
 }
 </style>

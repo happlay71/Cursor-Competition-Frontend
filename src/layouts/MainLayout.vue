@@ -1,8 +1,8 @@
 <template>
-  <div class="layout-container">
+  <div class="layout-container" :class="{ dark: isDark }">
     <div class="gradient-bg"></div>
     <!-- 左侧导航栏 -->
-    <div class="sidebar">
+    <el-aside :width="isCollapse ? '64px' : '200px'" class="aside">
       <div class="logo">竞赛获奖系统</div>
       <el-menu :default-active="activeMenu" class="menu" router>
         <el-menu-item index="/award">
@@ -38,13 +38,24 @@
           <span>个人信息</span>
         </el-menu-item>
       </el-menu>
-    </div>
-
+    </el-aside>
     <!-- 右侧内容区 -->
-    <div class="main">
+    <el-container class="right-container">
       <!-- 顶部栏 -->
       <div class="header">
+        <div class="header-left">
+          <el-icon class="collapse-icon" @click="toggleCollapse">
+            <component :is="isCollapse ? 'Expand' : 'Fold'" />
+          </el-icon>
+        </div>
         <div class="header-right">
+          <!-- 主题切换按钮 -->
+          <!-- <el-button
+            class="theme-switch"
+            :icon="isDark ? 'Sunny' : 'Moon'"
+            circle
+            @click="toggleTheme"
+          /> -->
           <el-dropdown @command="handleCommand">
             <span class="user-info">
               <el-avatar :size="32" class="avatar" :src="userAvatar">
@@ -66,12 +77,12 @@
       <div class="content">
         <router-view></router-view>
       </div>
-    </div>
+    </el-container>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Trophy, UserFilled, User, List, Collection, School, Avatar } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
@@ -114,6 +125,25 @@ const handleLogout = () => {
       ElMessage.info('已取消退出')
     })
 }
+
+// 主题切换相关
+const isDark = ref(false)
+
+// 切换主题
+const toggleTheme = () => {
+  isDark.value = !isDark.value
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+  document.documentElement.className = isDark.value ? 'dark' : ''
+}
+
+// 初始化主题
+onMounted(() => {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme === 'dark') {
+    isDark.value = true
+    document.documentElement.className = 'dark'
+  }
+})
 </script>
 
 <style scoped>
@@ -142,7 +172,7 @@ const handleLogout = () => {
   z-index: 0;
 }
 
-.sidebar {
+.aside {
   width: 240px;
   min-width: 240px;
   height: 100%;
@@ -194,7 +224,7 @@ const handleLogout = () => {
   background: rgba(110, 120, 200, 0.1);
 }
 
-.main {
+.right-container {
   flex: 1;
   margin-left: 240px;
   display: flex;
@@ -304,5 +334,277 @@ const handleLogout = () => {
   100% {
     background-position: 0% 50%;
   }
+}
+
+/* 主题切换按钮样式 */
+.theme-switch {
+  margin-right: 16px;
+}
+
+/* 暗色主题基础变量 */
+.dark {
+  --bg-primary: #1e2227;
+  --bg-secondary: #23272f;
+  --text-primary: #e5eaf3;
+  --text-secondary: #a9b2c8;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --hover-color: rgba(255, 255, 255, 0.05);
+  --active-color: rgba(64, 158, 255, 0.1);
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
+/* 暗色主题背景 */
+.dark .gradient-bg {
+  background: linear-gradient(
+    45deg,
+    rgba(48, 56, 65, 1) 0%,
+    rgba(64, 158, 255, 0.2) 25%,
+    rgba(48, 56, 65, 1) 50%,
+    rgba(64, 158, 255, 0.2) 75%,
+    rgba(48, 56, 65, 1) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientBg 15s ease infinite;
+}
+
+/* 暗色主题布局组件 */
+.dark .layout-container {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.dark .aside {
+  background: rgba(30, 34, 39, 0.95);
+  backdrop-filter: blur(10px);
+  border-right: 1px solid var(--border-color);
+}
+
+.dark .header {
+  background: rgba(30, 34, 39, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark .logo {
+  color: #409eff;
+  background: rgba(30, 34, 39, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dark .content {
+  background: rgba(35, 39, 47, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* 暗色主题菜单 */
+.dark .el-menu {
+  background-color: transparent;
+  border-right: none;
+}
+
+.dark .el-menu-item {
+  color: var(--text-primary);
+}
+
+.dark .el-menu-item:hover {
+  background-color: var(--hover-color);
+}
+
+.dark .el-menu-item.is-active {
+  background-color: var(--active-color);
+  color: #409eff;
+}
+
+.dark .el-menu-item .el-icon {
+  color: var(--text-secondary);
+}
+
+.dark .el-menu-item.is-active .el-icon {
+  color: #409eff;
+}
+
+/* 暗色主题用户信息 */
+.dark .user-info {
+  color: var(--text-primary);
+}
+
+.dark .user-info:hover {
+  background: var(--hover-color);
+}
+
+.dark .username {
+  color: var(--text-primary);
+}
+
+/* 暗色主题下拉菜单 */
+.dark .el-dropdown-menu {
+  background: rgba(35, 39, 47, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+}
+
+.dark .el-dropdown-menu__item {
+  color: var(--text-primary);
+}
+
+.dark .el-dropdown-menu__item:hover {
+  background-color: var(--hover-color);
+}
+
+/* 暗色主题头像 */
+.dark .el-avatar {
+  background: linear-gradient(120deg, #409eff 0%, #66b1ff 100%);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 2px 12px var(--shadow-color);
+}
+
+.dark .el-avatar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--shadow-color);
+}
+
+/* 暗色主题切换按钮 */
+.dark .theme-switch {
+  background: rgba(35, 39, 47, 0.95);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark .theme-switch:hover {
+  background: var(--hover-color);
+  border-color: #409eff;
+  color: #409eff;
+}
+
+/* 暗色主题组件样式 */
+.dark {
+  /* 表格样式 */
+  --el-table-border-color: var(--border-color);
+  --el-table-border: 1px solid var(--border-color);
+  --el-table-text-color: var(--text-primary);
+  --el-table-header-text-color: var(--text-primary);
+  --el-table-header-bg-color: rgba(35, 39, 47, 0.95);
+  --el-table-row-hover-bg-color: var(--hover-color);
+
+  /* 表单样式 */
+  --el-input-bg-color: rgba(35, 39, 47, 0.8);
+  --el-input-border-color: var(--border-color);
+  --el-input-hover-border-color: #409eff;
+  --el-input-focus-border-color: #409eff;
+  --el-input-text-color: var(--text-primary);
+  --el-input-placeholder-color: var(--text-secondary);
+
+  /* 按钮样式 */
+  --el-button-bg-color: rgba(35, 39, 47, 0.8);
+  --el-button-border-color: var(--border-color);
+  --el-button-hover-bg-color: var(--hover-color);
+  --el-button-hover-text-color: #409eff;
+  --el-button-disabled-bg-color: rgba(35, 39, 47, 0.5);
+  --el-button-disabled-text-color: var(--text-secondary);
+
+  /* 对话框样式 */
+  --el-dialog-bg-color: rgba(35, 39, 47, 0.95);
+  --el-dialog-border-color: var(--border-color);
+  --el-dialog-title-color: var(--text-primary);
+  --el-dialog-content-color: var(--text-primary);
+
+  /* 卡片样式 */
+  --el-card-bg-color: rgba(35, 39, 47, 0.95);
+  --el-card-border-color: var(--border-color);
+
+  /* 分页样式 */
+  --el-pagination-bg-color: transparent;
+  --el-pagination-text-color: var(--text-primary);
+  --el-pagination-button-bg-color: rgba(35, 39, 47, 0.8);
+  --el-pagination-button-disabled-bg-color: rgba(35, 39, 47, 0.5);
+  --el-pagination-hover-color: #409eff;
+
+  /* 下拉菜单样式 */
+  --el-select-dropdown-bg-color: rgba(35, 39, 47, 0.95);
+  --el-select-dropdown-border-color: var(--border-color);
+  --el-select-dropdown-item-hover-bg: var(--hover-color);
+  --el-select-dropdown-item-selected-bg: var(--active-color);
+}
+
+/* 暗色主题表格 */
+.dark .el-table {
+  background-color: transparent;
+}
+
+.dark .el-table tr {
+  background-color: rgba(35, 39, 47, 0.8);
+}
+
+.dark .el-table th.el-table__cell {
+  background-color: rgba(35, 39, 47, 0.95);
+}
+
+/* 暗色主题表单 */
+.dark .el-input__wrapper {
+  background-color: rgba(35, 39, 47, 0.8);
+  box-shadow: 0 0 0 1px var(--border-color) !important;
+}
+
+.dark .el-input__wrapper:hover,
+.dark .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px #409eff !important;
+}
+
+/* 暗色主题按钮 */
+.dark .el-button {
+  background-color: rgba(35, 39, 47, 0.8);
+  border-color: var(--border-color);
+}
+
+.dark .el-button--primary {
+  background-color: #409eff;
+  border-color: #409eff;
+  color: #fff;
+}
+
+.dark .el-button--primary:hover {
+  background-color: #66b1ff;
+  border-color: #66b1ff;
+}
+
+/* 暗色主题对话框 */
+.dark .el-dialog {
+  background-color: rgba(35, 39, 47, 0.95);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+/* 暗色主题卡片 */
+.dark .el-card {
+  background-color: rgba(35, 39, 47, 0.95);
+  border-color: var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+/* 暗色主题分页 */
+.dark .el-pagination button {
+  background-color: rgba(35, 39, 47, 0.8);
+}
+
+.dark .el-pagination .el-pager li {
+  background-color: rgba(35, 39, 47, 0.8);
+}
+
+.dark .el-pagination .el-pager li.active {
+  background-color: #409eff;
+  color: #fff;
+}
+
+/* 暗色主题下拉菜单 */
+.dark .el-select-dropdown {
+  background-color: rgba(35, 39, 47, 0.95);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+}
+
+.dark .el-select-dropdown__item.selected {
+  background-color: var(--active-color);
+  color: #409eff;
 }
 </style>
