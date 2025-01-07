@@ -4,18 +4,22 @@
     <div class="search-wrapper">
       <div class="search-form">
         <div class="search-inputs">
-          <el-input
-            v-model="searchForm.userAccount"
-            placeholder="请输入用户账号"
-            clearable
-            style="width: 200px"
-          />
-          <el-input
-            v-model="searchForm.username"
-            placeholder="请输入用户名称"
-            clearable
-            style="width: 200px"
-          />
+          <el-form-item label="用户账号">
+            <el-input
+              v-model="searchForm.userAccount"
+              placeholder="请输入用户账号"
+              clearable
+              style="width: 200px"
+            />
+          </el-form-item>
+          <el-form-item label="用户名称">
+            <el-input
+              v-model="searchForm.username"
+              placeholder="请输入用户名称"
+              clearable
+              style="width: 200px"
+            />
+          </el-form-item>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>

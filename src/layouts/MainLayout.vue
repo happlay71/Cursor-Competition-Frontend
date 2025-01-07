@@ -49,27 +49,30 @@
           </el-icon>
         </div> -->
         <div class="header-right">
-          <!-- 主题切换按钮 -->
-          <!-- <el-button
-            class="theme-switch"
-            :icon="isDark ? 'Sunny' : 'Moon'"
-            circle
-            @click="toggleTheme"
-          /> -->
-          <el-dropdown @command="handleCommand">
-            <span class="user-info">
-              <el-avatar :size="32" class="avatar" :src="userAvatar">
-                {{ username?.charAt(0)?.toUpperCase() }}
-              </el-avatar>
-              <span class="username">{{ username }}</span>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item command="profile">个人信息</el-dropdown-item>
-                <el-dropdown-item command="logout">退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+          <!-- 使用一个容器包裹主题切换按钮和用户信息 -->
+          <div class="button-container">
+            <!-- 主题切换按钮 -->
+            <el-button
+              class="theme-switch"
+              :icon="isDark ? 'Sunny' : 'Moon'"
+              circle
+              @click="toggleTheme"
+            />
+            <el-dropdown @command="handleCommand">
+              <span class="user-info">
+                <el-avatar :size="32" class="avatar" :src="userAvatar">
+                  {{ username?.charAt(0)?.toUpperCase() }}
+                </el-avatar>
+                <span class="username">{{ username }}</span>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="profile">个人信息</el-dropdown-item>
+                  <el-dropdown-item command="logout">退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
       </div>
 
@@ -271,6 +274,12 @@ onMounted(() => {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
+.button-container {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 主题按钮和用户信息之间的间距 */
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -338,10 +347,26 @@ onMounted(() => {
 
 /* 主题切换按钮样式 */
 .theme-switch {
-  margin-right: 16px;
+  /* position: fixed; */
+  cursor: pointer;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
 }
 
-/* 暗色主题基础变量 */
+.dark .theme-switch {
+  background: rgba(35, 39, 47, 0.95);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark .theme-switch:hover {
+  background: var(--hover-color);
+  border-color: #409eff;
+  color: #409eff;
+}
+
+/* 暗色主题变量 */
 .dark {
   --bg-primary: #1e2227;
   --bg-secondary: #23272f;
@@ -369,7 +394,15 @@ onMounted(() => {
 
 /* 暗色主题布局组件 */
 .dark .layout-container {
-  background-color: var(--bg-primary);
+  /* background-color: var(--bg-primary);
+  background: linear-gradient(
+    45deg,
+    rgba(48, 56, 65, 1) 0%,
+    rgba(64, 158, 255, 0.2) 25%,
+    rgba(48, 56, 65, 1) 50%,
+    rgba(64, 158, 255, 0.2) 75%,
+    rgba(48, 56, 65, 1) 100%
+  ); */
   color: var(--text-primary);
 }
 

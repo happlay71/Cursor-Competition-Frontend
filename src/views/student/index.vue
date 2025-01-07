@@ -4,40 +4,51 @@
     <div class="search-wrapper">
       <div class="search-form">
         <div class="search-inputs">
-          <el-input
-            v-model="searchForm.studentId"
-            placeholder="请输入学号"
-            clearable
-            style="width: 200px"
-          />
-          <el-input
-            v-model="searchForm.studentName"
-            placeholder="请输入姓名"
-            clearable
-            style="width: 200px"
-          />
-          <el-select
-            v-model="searchForm.profession"
-            placeholder="请选择专业"
-            clearable
-            filterable
-            style="width: 200px"
-          >
-            <el-option v-for="name in majorNameList" :key="name" :label="name" :value="name" />
-          </el-select>
-          <el-select
-            v-model="searchForm.certification"
-            placeholder="认证状态"
-            clearable
-            style="width: 200px"
-          >
-            <el-option
-              v-for="item in certificationOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
+          <el-form-item label="学号">
+            <el-input
+              v-model="searchForm.studentId"
+              placeholder="请输入学号"
+              clearable
+              style="width: 200px"
             />
-          </el-select>
+          </el-form-item>
+
+          <el-form-item label="姓名">
+            <el-input
+              v-model="searchForm.studentName"
+              placeholder="请输入姓名"
+              clearable
+              style="width: 200px"
+            />
+          </el-form-item>
+
+          <el-form-item label="专业">
+            <el-select
+              v-model="searchForm.profession"
+              placeholder="请选择专业"
+              clearable
+              filterable
+              style="width: 200px"
+            >
+              <el-option v-for="name in majorNameList" :key="name" :label="name" :value="name" />
+            </el-select>
+          </el-form-item>
+
+          <el-form-item label="认证状态">
+            <el-select
+              v-model="searchForm.certification"
+              placeholder="认证状态"
+              clearable
+              style="width: 200px"
+            >
+              <el-option
+                v-for="item in certificationOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>

@@ -4,18 +4,23 @@
     <div class="search-wrapper">
       <div class="search-form">
         <div class="search-inputs">
-          <el-input
-            v-model="searchForm.studentName"
-            placeholder="请输入学生姓名"
-            clearable
-            style="width: 200px"
-          />
-          <el-input
-            v-model="searchForm.awardId"
-            placeholder="请输入获奖编号"
-            clearable
-            style="width: 200px"
-          />
+          <el-form-item label="学生姓名">
+            <el-input
+              v-model="searchForm.studentName"
+              placeholder="请输入学生姓名"
+              clearable
+              style="width: 200px"
+            />
+          </el-form-item>
+
+          <el-form-item label="获奖编号">
+            <el-input
+              v-model="searchForm.awardId"
+              placeholder="请输入获奖编号"
+              clearable
+              style="width: 200px"
+            />
+          </el-form-item>
         </div>
         <div class="search-buttons">
           <el-button type="primary" @click="handleSearch">搜索</el-button>
