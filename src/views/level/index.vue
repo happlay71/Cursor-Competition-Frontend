@@ -32,7 +32,7 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">查询</el-button>
-          <el-button type="primary" @click="handleAdd">新增</el-button>
+          <el-button type="primary" @click="handleAdd" v-if="isAdmin">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </el-form-item>
       </el-form>

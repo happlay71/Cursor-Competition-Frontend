@@ -17,7 +17,7 @@
           </el-form-item>
         </div>
         <div class="search-buttons">
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
+          <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button type="primary" @click="handleAdd" v-if="isAdmin">新增</el-button>
           <el-button @click="resetSearch">重置</el-button>
         </div>

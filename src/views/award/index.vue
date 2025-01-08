@@ -35,6 +35,15 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item label="学生姓名">
+          <el-input
+            v-model="queryParams.studentName"
+            placeholder="请输入学生姓名"
+            clearable
+            style="width: 240px"
+          >
+          </el-input>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">查询</el-button>
           <el-button type="primary" @click="handleAdd">新增</el-button>
@@ -256,6 +265,7 @@ const isAdmin = computed(() => userStore.isAdmin)
 const queryParams = reactive({
   competitionName: '',
   competitionLevel: '',
+  studentName: '',
   pageNo: 1,
   pageSize: 10,
 })
@@ -334,6 +344,7 @@ const resetSearch = () => {
   Object.assign(queryParams, {
     competitionName: '',
     competitionLevel: '',
+    studentName: '',
     pageNo: 1,
     pageSize: 10,
   })
